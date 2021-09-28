@@ -17,8 +17,15 @@ compute_match_score(paper_id, keyword):
 ```
 
 ## Algorithmic Design
-For now, I propose a similar solution to that presented in a past FORWARD project used to rank researchers by keyword. The source of the data is still TBD.
-
 Given a dataset of research papers and popular computer-science-related keywords, we can generate embeddings for research papers (a combination of title and abstract), and individual keywords using Python `Sentence Transformers`. With these embeddings, we can use a similarity function like Cosine Similarity to compute a score for each pair of keyword-paper matches. We can filter out duplicate keywords using a clustering algorithm on the keyword embeddings. The resulting data gives us the top _n_ keywords present in any research paper. This data can be stored in a SQL table. At its simplest, every row in the table will contain a paper id and a keyword id.
 
 To retrieve a list of papers given a search query of keywords, we can do a SQL lookup on our above table. We will filter all rows that contain the input keywords and collect the the corresponding papers.
+
+The algorithm will be split into three sections: Generate paper embeddings, assign papers to keywords, find papers by keywords.
+
+### 1: Generate Embeddings
+In this step, we will create a vector embedding for every paper on our dataset. This will be done through the Python library `Sentence Transformers`. For every paper, we will concatenate the paper title and abstract, and use this string to genereate a vector embedding. We will do the same for every keyword.
+
+### 2: Assign To Keywords
+
+### 3: Find papers by Keywords
