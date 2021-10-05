@@ -23,9 +23,14 @@ To retrieve a list of papers given a search query of keywords, we can do a SQL l
 
 The algorithm will be split into three sections: Generate paper embeddings, assign papers to keywords, find papers by keywords.
 
+The overall architecture of this module is outlined in the diagram below.
+![System Context](/figures/SystemContext.png)
+
 ### 1: Generate Embeddings
 In this step, we will create a vector embedding for every paper on our dataset. This will be done through the Python library `Sentence Transformers`. For every paper, we will concatenate the paper title and abstract, and use this string to genereate a vector embedding. We will do the same for every keyword.
+![Generate Embeddings](/figures/1_GenerateEmbeddings.png)
 
 ### 2: Assign To Keywords
-
+![Generate Embeddings](/figures/2_AssignPaperKeywords.png)
 ### 3: Find papers by Keywords
+![Generate Embeddings](/figures/3_FindPapers.png)
