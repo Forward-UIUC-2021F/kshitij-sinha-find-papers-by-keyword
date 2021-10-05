@@ -11,10 +11,15 @@ new_paper_count = 1000
 paper_file = "../data/filtered_arxiv.json"
 save_file = "../data/filtered_arxiv_small.json"
 
+print(f"Loading from {paper_file}")
 with open(paper_file) as f:
     paper_json = json.load(f)
 
+print(f"Extracting first {new_paper_count} paper data")
 sliced_json = paper_json[:new_paper_count]
 
+print(f"Saving...")
 with open(save_file, "w") as f:
     json.dump(sliced_json, f, indent=2)
+
+print(f"Saved {new_paper_count} entries to file {save_file}")
