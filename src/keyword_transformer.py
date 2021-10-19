@@ -21,28 +21,24 @@ class KeywordTransformer:
         """
         model = SentenceTransformer('bert-base-nli-mean-tokens')
 
-        if self.subset_size != None:
-            keyword_csv = self.keyword_data[:self.subset_size]
+        keyword_data = self.keyword_data if self.subset_size != None else self.keyword_data[:self.subset_size]
+        keywords = [d['keyword'] for d in keyword_data]
 
-        return model.encode(keyword_csv, show_progress_bar=True)
+        return model.encode(keywords, show_progress_bar=True)
 
     def getEmbeddingsMetadata(self):
         """
-        Creates an array of dictionaries containing paper titles, abstracts, and index of 
-        their entry in the embedding array
+        Create a dictionary mapping every keyword to its frequency and embedding index
         """
-        metadata = []
+        metadata = {}
 
-        for ind, keyword in enumerate(self.keyword_data):
+        for ind, keyword_entry in enumerate(self.keyword_data):
             if self.subset_size != None and ind > self.subset_size:
                 # Only iterate to size of subset
                 break
-
-            entry = {
-                'index': ind,
-                'keyword': keyword['keyword'],
-                'frequency': keyword['frequency'],
+            metadata[keyword_entry['keyword']] = {
+                "index": ind,
+                "frequency": keyword_entry["frequency"],
             }
-            metadata.append(entry)
 
         return metadata
