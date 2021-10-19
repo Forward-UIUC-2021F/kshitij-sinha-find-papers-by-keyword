@@ -141,3 +141,5 @@ cython_debug/
 DS_Store
 data
 old_data
+small_data
+sandbox.py
