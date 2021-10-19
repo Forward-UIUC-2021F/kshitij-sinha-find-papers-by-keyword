@@ -18,7 +18,7 @@ print("Loading keyword file")
 with open(keywords_file, newline='') as f:
     keyword_data_reader = list(csv.DictReader(f))
 
-keyword_transformer = KeywordTransformer(keyword_data_reader, 100)
+keyword_transformer = KeywordTransformer(keyword_data_reader)
 print("Files loaded")
 
 print("Loading and preprocessing data/models")
