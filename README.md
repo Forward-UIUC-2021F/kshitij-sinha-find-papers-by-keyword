@@ -5,7 +5,7 @@ This module is responsible for finding research papers that are most relevant to
 ## Functional Design
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
-get_relevant_papers(keywords):
+get_relevant_papers(keywords, n):
   ...
   return [(paper_1_id, match_1_score), (paper_2_id, match_2_score), ..., (paper_n_id, match_n_score)]
 ```
