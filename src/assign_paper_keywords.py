@@ -23,10 +23,10 @@ paper_metadata_file = data_root_dir + "SB_filtered_paper_data.pickle"
   
 golden_keywords_file = data_root_dir + "golden_words.csv" 
 
-paper_embeddings_file = data_root_dir + "SB_paper_embeddings.pickle"    # Complete
+paper_embeddings_file = data_root_dir + "SB_paper_embeddings.pickle"
 keyword_embeddings_file = data_root_dir + "springer_keyword_embs.pickle"
 
-
+word_to_other_freq_file = data_root_dir + "other_freqs.pickle"
 
 ### Reading data from files ###
 print("Loading and preprocessing data")
@@ -40,26 +40,15 @@ keyword_embeddings = read_pickle_file(keyword_embeddings_file)
 keyword_embeddings = normalize_embs(keyword_embeddings)
 
 # Frequency counts of keywords for non-cs papers from arxiv
-# word_to_other_freq = read_pickle_file(word_to_other_freq_file)
+word_to_other_freq = read_pickle_file(word_to_other_freq_file)
 
-print(paper_embeddings.shape)
-print(keyword_embeddings.shape)
-
-# Database connection
-# mydb = mysql.connector.connect(
-#   host="localhost",
-#   user="sandbox",
-#   password="sandbox",
-#   database="assign_paper_kwds"
-# )
-# mycursor = mydb.cursor()
-
-# mycursor.execute("""
-#     SELECT id, title, abstract
-#     FROM Publication
-#     WHERE abstract IS NOT NULL
-# """)
-# papers = mycursor.fetchall()
+mydb = mysql.connector.connect(
+  host="localhost",
+  user="forward",
+  password="forward",
+  database="assign_paper_kwds"
+)
+mycursor = mydb.cursor()
 
 """
 Keyword set formed from the set intersection of
@@ -70,11 +59,6 @@ with freq >= 5
 golden_keywords_full = pd.read_csv(golden_keywords_file)
 golden_keywords = set(golden_keywords_full['word'])
 
-
-# paper_id_to_idx = {}
-# for i in range(len(paper_ids)):
-#     paper_id_to_idx[paper_ids[i]] = i
-
 keywords_trie = construct_trie(golden_keywords)
 keywords_re = construct_re(keywords_trie)
 print("Starting paper keyword extraction: ")
@@ -84,7 +68,7 @@ p_i = 0
 # Every row in database has paper, keyword, and match score
 # For every paper, removes duplicate keywords using clustering
 for paper in paper_metadata:
-    # paper_id = paper[0]
+    paper_id = paper['index']
     raw_text = concat_paper_info(paper['title'], paper['abstract'])
 
     # Get candidate keywords by checking occurrence
@@ -93,25 +77,25 @@ for paper in paper_metadata:
         continue
     try:
         # Keyword_matches stored as [(<keyword>, <id>), ...]
-        match_ids = list(map(lambda t: keyword_metadata[t[0]]['index'], keyword_matches))
+        match_ids = [keyword_metadata[match[0]]['index'] for match in keyword_matches]
     except KeyError:
         continue
-    # except Exception as e:
-    #     print("Exception", type(e), e)
-        # match_ids = list(map(lambda t: word_to_id[standardize_non_ascii(t[0])], keyword_matches))
 
     match_embs = keyword_embeddings[match_ids]
 
     paper_idx = paper['index']
     try:
         paper_embedding = paper_embeddings[paper_idx]
-    except KeyError:
+    except IndexError:
+        print(f"Could not find emebedding at index {paper_idx}")
         continue
 
     paper_embedding = normalize_vec(paper_embedding)
 
-    sim_scores = np.dot(match_embs, paper_embedding.T)
+    # Compute dot of every match embedding with this paper's embedding
+    sim_scores = np.dot(match_embs, paper_embedding)
 
+    # Keyword scores will be stored as: (<keyword_id, match_score>, ...)
     keyword_scores = []
     for i in range(len(match_ids)):
         m_t = keyword_matches[i]
@@ -120,12 +104,12 @@ for paper in paper_metadata:
         kw_score = sim_scores[i]
 
         # Checking if current keyword appears in non-cs papers in arxiv corpus
-        # if keyword in word_to_other_freq:
-        #     other_freq = word_to_other_freq[keyword]
+        if keyword in word_to_other_freq:
+            other_freq = word_to_other_freq[keyword]
 
-        #     # Penalize general words
-        #     if other_freq >= 1000:
-        #         kw_score /= math.sqrt(other_freq)
+            # Penalize general words
+            if other_freq >= 1000:
+                kw_score /= math.sqrt(other_freq)
 
         kw_t = (match_ids[i], kw_score)
         keyword_scores.append(kw_t)
@@ -160,30 +144,18 @@ for paper in paper_metadata:
             unique_top_keywords.append(top_keywords[i])
 
     top_keywords = unique_top_keywords
-    # print("The top keywords: ", top_keywords)
-    # print("-" * 10)
-
-    print(raw_text)
-    for id, score in top_keywords:
-        for k, v in keyword_metadata.items():
-            if v['index'] == id:
-                name = k
-        print(name, score)
+    print("The top keywords: ", top_keywords)
+    print("-" * 10)
 
 
     # Insert data into db
-    # for kw_t in top_keywords:
-    #     keyword_id = str(kw_t[0])
-    #     keyword_score = str(kw_t[1])
-    #     insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
-        # mycursor.execute(insert_sql, [paper_id, keyword_id, keyword_score])
-
-    # mydb.commit()
-
+    for kw_t in top_keywords:
+        keyword_id = str(kw_t[0])
+        keyword_score = str(kw_t[1])
+        insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
+        mycursor.execute(insert_sql, [paper_id, keyword_id, keyword_score])
 
     if p_i % 1000 == 0:
         print("On " + str(p_i) + "th paper")
-    p_i += 1
 
-    if p_i == 5:
-        break
+mydb.commit()
