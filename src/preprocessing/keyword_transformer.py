@@ -28,17 +28,18 @@ class KeywordTransformer:
 
     def getEmbeddingsMetadata(self):
         """
-        Create a dictionary mapping every keyword to its frequency and embedding index
+        Create a list of dictionaries of keywords, frequency, and embedding index
         """
-        metadata = {}
+        metadata = []
 
         for ind, keyword_entry in enumerate(self.keyword_data):
             if self.subset_size != None and ind > self.subset_size:
                 # Only iterate to size of subset
                 break
-            metadata[keyword_entry['keyword']] = {
-                "index": ind,
+            metadata.append({
+                "keyword": keyword_entry['keyword'],
+                "id": ind,
                 "frequency": keyword_entry["frequency"],
-            }
+            })
 
         return metadata

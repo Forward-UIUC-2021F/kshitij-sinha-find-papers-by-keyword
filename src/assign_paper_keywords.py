@@ -59,6 +59,8 @@ with freq >= 5
 golden_keywords_full = pd.read_csv(golden_keywords_file)
 golden_keywords = set(golden_keywords_full['word'])
 
+keyword_ids = {k["keyword"]: k["id"] for k in keyword_metadata}
+
 keywords_trie = construct_trie(golden_keywords)
 keywords_re = construct_re(keywords_trie)
 print("Starting paper keyword extraction: ")
@@ -77,7 +79,7 @@ for paper in paper_metadata:
         continue
     try:
         # Keyword_matches stored as [(<keyword>, <id>), ...]
-        match_ids = [keyword_metadata[match[0]]['index'] for match in keyword_matches]
+        match_ids = [keyword_ids[match[0]] for match in keyword_matches]
     except KeyError:
         continue
 
