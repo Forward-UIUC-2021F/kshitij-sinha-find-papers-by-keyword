@@ -138,4 +138,6 @@ dmypy.json
 cython_debug/
 
 # VSCode
+data
+old_data
 .DS_Store
