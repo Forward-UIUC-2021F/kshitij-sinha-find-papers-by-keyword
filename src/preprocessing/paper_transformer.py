@@ -32,6 +32,16 @@ class PaperTransformer:
         """
         Creates an array of dictionaries containing paper titles, abstracts, and index of 
         their entry in the embedding array
+
+        Schema:
+        [
+            {
+                "id": ...
+                "arxiv_id": ...
+                "title": ...
+                "abstract" ...
+            }
+        ]
         """
         metadata = []
 
@@ -41,7 +51,8 @@ class PaperTransformer:
                 break
 
             entry = {
-                'index': ind,
+                'id': ind,
+                'arxiv_id': paper['id'],
                 'title': paper['title'],
                 'abstract': paper['abstract'],
             }

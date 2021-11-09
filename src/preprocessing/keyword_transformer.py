@@ -29,6 +29,15 @@ class KeywordTransformer:
     def getEmbeddingsMetadata(self):
         """
         Create a list of dictionaries of keywords, frequency, and embedding index
+
+        Schema:
+        [
+            {
+                "keyword": ... ,
+                "id": ... ,
+                "frequency": ...
+            }
+        ]
         """
         metadata = []
 

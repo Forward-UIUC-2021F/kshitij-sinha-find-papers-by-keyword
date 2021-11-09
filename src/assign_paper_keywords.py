@@ -31,9 +31,6 @@ word_to_other_freq_file = data_root_dir + "other_freqs.pickle"
 ### Reading data from files ###
 print("Loading and preprocessing data")
 
-keyword_metadata = read_pickle_file(keyword_metadata_file)
-paper_metadata = read_pickle_file(paper_metadata_file)
-
 paper_embeddings = read_pickle_file(paper_embeddings_file) 
 
 keyword_embeddings = read_pickle_file(keyword_embeddings_file)
@@ -49,6 +46,19 @@ mydb = mysql.connector.connect(
   database="assign_paper_kwds"
 )
 mycursor = mydb.cursor()
+dictcursor = mydb.cursor(dictionary=True)
+
+dictcursor.execute("""
+    SELECT id, keyword
+    FROM FoS
+""")
+keyword_metadata = dictcursor.fetchall()
+
+dictcursor.execute("""
+    SELECT id, title, abstract
+    FROM Publication
+""")
+paper_metadata = dictcursor.fetchall()
 
 """
 Keyword set formed from the set intersection of
@@ -69,8 +79,8 @@ p_i = 0
 # For every paper, finds top keyword matches. Stores matches in database
 # Every row in database has paper, keyword, and match score
 # For every paper, removes duplicate keywords using clustering
-for paper in paper_metadata:
-    paper_id = paper['index']
+for paper in paper_metadata[:len(paper_embeddings)]:
+    paper_id = paper['id']
     raw_text = concat_paper_info(paper['title'], paper['abstract'])
 
     # Get candidate keywords by checking occurrence
@@ -83,13 +93,13 @@ for paper in paper_metadata:
     except KeyError:
         continue
 
+    # Uses assmuption that ids are the indices of the embedding
     match_embs = keyword_embeddings[match_ids]
 
-    paper_idx = paper['index']
     try:
-        paper_embedding = paper_embeddings[paper_idx]
+        paper_embedding = paper_embeddings[paper_id]
     except IndexError:
-        print(f"Could not find emebedding at index {paper_idx}")
+        print(f"Could not find paper at index {paper_id}")
         continue
 
     paper_embedding = normalize_vec(paper_embedding)
@@ -145,9 +155,12 @@ for paper in paper_metadata:
             curr_groups.add(group_idx)
             unique_top_keywords.append(top_keywords[i])
 
-    top_keywords = unique_top_keywords
-    print("The top keywords: ", top_keywords)
-    print("-" * 10)
+    
+    if p_i % 1000 == 0:
+        print("On " + str(p_i) + "th paper")
+        top_keywords = unique_top_keywords
+        print("The top keywords: ", top_keywords)
+        print("-" * 10)
 
 
     # Insert data into db
@@ -157,7 +170,6 @@ for paper in paper_metadata:
         insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
         mycursor.execute(insert_sql, [paper_id, keyword_id, keyword_score])
 
-    if p_i % 1000 == 0:
-        print("On " + str(p_i) + "th paper")
+    p_i += 1
 
 mydb.commit()
