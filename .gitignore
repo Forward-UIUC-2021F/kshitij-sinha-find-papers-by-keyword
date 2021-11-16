@@ -138,7 +138,7 @@ dmypy.json
 cython_debug/
 
 # VSCode
-DS_Store
+.DS_Store
 
 # Data folder
 data
