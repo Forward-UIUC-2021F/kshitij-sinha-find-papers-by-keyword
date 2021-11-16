@@ -61,7 +61,7 @@ def store_paper_embeddings(paper_data: dict, out_file: str):
     paper_embeddings = model.encode(paper_raw, show_progress_bar=True)
 
     print("Done. Saving data")
-    # write_pickle_data(paper_embeddings, out_file)
+    write_pickle_data(paper_embeddings, out_file)
 
 
 
@@ -89,7 +89,7 @@ def store_keyword_embeddings(keyword_data: str, out_file):
     keyword_embeddings = model.encode(keywords, show_progress_bar=True)
 
     print("Done. Saving data")
-    # write_pickle_data(keyword_embeddings, out_file)
+    write_pickle_data(keyword_embeddings, out_file)
 
 
 if __name__ == "__main__":
