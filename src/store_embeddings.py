@@ -1,34 +1,14 @@
-import csv
-import json
-import sys
-import argparse
 import mysql.connector
 
-from preprocessing.keyword_transformer import KeywordTransformer
-from preprocessing.paper_transformer import PaperTransformer
-from utils import write_pickle_data
+from sentence_transformers import SentenceTransformer
+from utils import write_pickle_data, concat_paper_info
 
 
 def main():
     """
-    Command line program to preprocess keyword and paper files. Will
-    generate keyword and paper embeddings and metadata files (in pickle format)
-
-    Script call format:
-        python store_embeddings.py --keywords <keyword_file> --papers <paper_file> --out <out_dir>
-        <keyword_file> is optional and specifies the csv file of keywords to parse
-        <paper_file> is optional and specifies the json file of papers to parse
-        <out_dir> is required and specifies the directory to store pickle files in
+    Command line program to generate keyword and paper embeddings, where data is
+    accessed from a database
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--keywords', dest='keyword_file', type=str,
-                        help='filepath to csv containing keywords to parse')
-    parser.add_argument('--papers', dest='paper_file', type=str,
-                        help='filepath to json containing papers to parse')
-    parser.add_argument('--out', dest='out_dir', type=str, required=True,
-                        help='path to directory where pickle files will be stored')
-
-    args = parser.parse_args()
 
     mydb = mysql.connector.connect(
         host="localhost",
@@ -36,87 +16,80 @@ def main():
         password="forward",
         database="assign_paper_kwds"
     )
-    mycursor = mydb.cursor()
+    dictcursor = mydb.cursor(dictionary=True)
 
-    if args.keyword_file != None:
-        print(f"Parsing keyword file {args.keyword_file}")
-        store_keywords(args.keyword_file, args.out_dir, mycursor)
-    if args.paper_file != None:
-        print(f"Parsing paper file {args.paper_file}")
-        store_papers(args.paper_file, args.out_dir, mycursor)
+    dictcursor.execute("""
+        SELECT keyword
+        FROM FoS
+    """)
+    keywords = dictcursor.fetchall()
+
+
+    dictcursor.execute("""
+        SELECT id, title, abstract
+        FROM Publication
+    """)
+    paper_text = dictcursor.fetchall()
+
+    store_keyword_embeddings(keywords, "springer_keyword_embs.pickle")
+    store_paper_embeddings(paper_text, "SB_paper_embeddings.pickle")
 
     mydb.commit()
-    mycursor.close()
+    dictcursor.close()
 
 
-def store_papers(papers_filepath: str, out_dir: str, cursor):
+def store_paper_embeddings(paper_data: dict, out_file: str):
     """
     Stores the paper embeddings and paper meta into pickle files
 
     Args:
-        paper_filepath: the path to a json file containing papers data
-            Json data should be in the following schama:
+        paper_data: dictionary containing paper title and abstract, using the folloing schema:
             [
                 {
-                    "arxiv_id": "0704.0002",
                     "title": "Sparsity-certifying Graph Decompositions",
-                    "abstract": "  We describe a new algorithm, the $(k,\\ell)$-pebble game with colors, and use\nit obtain a characterization of the family of $(k,\\ell)$-sparse graphs and\nalgorithmic solutions to a family of problems concerning tree decompositions of\ngraphs. Special instances of sparse graphs appear in rigidity theory and have\nreceived increased attention in recent years. In particular, our colored\npebbles generalize and strengthen the previous results of Lee and Streinu and\ngive a new proof of the Tutte-Nash-Williams characterization of arboricity. We\nalso present a new decomposition that certifies sparsity based on the\n$(k,\\ell)$-pebble game with colors. Our work also exposes connections between\npebble game algorithms and previous sparse graph algorithms by Gabow, Gabow and\nWestermann and Hendrickson.\n",
+                    "abstract": "  We describe a new algorithm, the $(k,\\ell)$-pebble game ..."
                 },
                 ...
             ]
-        out_dir: the directory to store the paper embeddings and metadata pickle files in
+        out_file: the file to store the paper embeddings in
     """
-    # Output pickle files
-    emb_out_file = out_dir + "SB_paper_embeddings.pickle"
+    print("Getting embeddings for " + str(len(paper_data)) + " papers")
 
-    print("Loading paper file")
-    with open(papers_filepath) as f:
-        paper_ts = json.load(f)
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    paper_raw = [concat_paper_info(t['title'], t['abstract']) for t in paper_data]
 
-    paper_transformer = PaperTransformer(paper_ts)
-
-    print("Getting embeddings for " + str(len(paper_ts)) + " papers")
-    # paper_embeddings = paper_transformer.generateEmbeddings()
-    paper_metadata = paper_transformer.getEmbeddingsMetadata()
+    paper_embeddings = model.encode(paper_raw, show_progress_bar=True)
 
     print("Done. Saving data")
-    # write_pickle_data(paper_embeddings, emb_out_file)
-    sql = """
-    REPLACE INTO Publication (id, arxiv_id, title, abstract)
-    VALUES (%(id)s, %(arxiv_id)s, %(title)s, %(abstract)s)
-    """
-    cursor.executemany(sql, paper_metadata)
+    # write_pickle_data(paper_embeddings, out_file)
 
 
 
-def store_keywords(keywords_filepath: str, out_dir: str, cursor):
+def store_keyword_embeddings(keyword_data: str, out_file):
     """
     Stores the keywords embeddings and keyword meta into pickle files
 
     Args:
-        keywords_filepath: the path to a csv file containing keywords and frequencies
-            csv file should be in the following schema:
-                keyword,frequency
+        keywords_data: dictionary of keywords, using the following schema:
+            [
+                {
+                    "keyword": "machine learning",
+                },
+                {
+                    "keyword": "deep learning",
+                }
+                ...
+            ]
         out_dir: the directory to store the keyword embeddings and metadat pickle files in
     """
-    # Output pickle files
-    emb_out_file = out_dir + "springer_keyword_embs.pickle"
-
-    print("Loading keyword file")
-    with open(keywords_filepath, newline='') as f:
-        keyword_data_reader = list(csv.DictReader(f, quotechar="|"))
-
-    keyword_transformer = KeywordTransformer(keyword_data_reader)
-
     print("Getting embeddings for keywords")
-    # keyword_embeddings = keyword_transformer.generateEmbeddings()
-    keyword_metadata = keyword_transformer.getEmbeddingsMetadata()
+
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    keywords = [d['keyword'] for d in keyword_data]
+    keyword_embeddings = model.encode(keywords, show_progress_bar=True)
 
     print("Done. Saving data")
-    # write_pickle_data(keyword_embeddings, emb_out_file)
-
-    sql = "REPLACE INTO FoS (id, keyword, frequency) VALUES (%(id)s, %(keyword)s, %(frequency)s)"
-    cursor.executemany(sql, keyword_metadata)
+    # write_pickle_data(keyword_embeddings, out_file)
 
 
 if __name__ == "__main__":

@@ -17,9 +17,6 @@ def normalize_vec(vec):
 
 
 data_root_dir = '../data/'
-
-keyword_metadata_file = data_root_dir + "springer_keyword_data.pickle"
-paper_metadata_file = data_root_dir + "SB_filtered_paper_data.pickle"
   
 golden_keywords_file = data_root_dir + "golden_words.csv" 
 
@@ -172,4 +169,5 @@ for paper in paper_metadata[:len(paper_embeddings)]:
 
     p_i += 1
 
+print(f"{p_i} papers analyzed")
 mydb.commit()
