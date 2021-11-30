@@ -8,7 +8,8 @@ def generate_keyword_data(index, keywords_file):
         keyword_data = csv.DictReader(f, quotechar="|")
 
         for i, keyword_entry in enumerate(keyword_data):
-            entry_to_store = {key: keyword_entry[key] for key in keys_to_extract}
+            entry_to_store = {key: keyword_entry[key]
+                              for key in keys_to_extract}
 
             if i % 10000 == 0:
                 print(f"On {i}th keyword")
@@ -18,11 +19,15 @@ def generate_keyword_data(index, keywords_file):
                 "_source": entry_to_store
             }
 
-    
-es = Elasticsearch()
-index = "fos"
-keywords_file = "../data/Keywords-Springer-83K.csv"
+def main():
+    es = Elasticsearch()
+    index = "fos"
+    keywords_file = "../data/Keywords-Springer-83K.csv"
 
-print("Indexing keywords")
-# Indexing keywords
-helpers.bulk(es, generate_keyword_data(index, keywords_file))
+    # Add data
+    print("Indexing keywords")
+    helpers.bulk(es, generate_keyword_data(index, keywords_file))
+
+
+if __name__ == "__main__":
+    main()
