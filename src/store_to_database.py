@@ -12,15 +12,12 @@ def main():
         python store_embeddings.py --keywords <keyword_file> --papers <paper_file> --out <out_dir>
         <keyword_file> is optional and specifies the csv file of keywords to parse
         <paper_file> is optional and specifies the json file of papers to parse
-        <out_dir> is required and specifies the directory to store pickle files in
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--keywords', "-k", dest='keyword_file', type=str,
                         help='filepath to csv containing keywords to parse')
     parser.add_argument('--papers', "-p", dest='paper_file', type=str,
                         help='filepath to json containing papers to parse')
-    parser.add_argument('--out', "-o", dest='out_dir', type=str, required=True,
-                        help='path to directory where pickle files will be stored')
 
     args = parser.parse_args()
 
