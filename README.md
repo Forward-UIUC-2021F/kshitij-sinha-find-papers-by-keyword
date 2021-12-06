@@ -32,5 +32,20 @@ In this step, we will create a vector embedding for every paper on our dataset. 
 
 ### 2: Assign To Keywords
 ![Generate Embeddings](/figures/2_AssignPaperKeywords.png)
+Every paper is then assigned a set of keywords that best describe the keywords contents. The algorithm to assign top keywords to papers is described here.
+
+1) Create a regex-based keyword-search index to quickly search for mathing keywords. This regex index will be constructed through an intermediary prefix trie. (implementation found in `src/trie/Trie.py`). We call this index `keywords_re`.
+
+2) Iterate through every paper, `paper_i`, defining  `pt_i` to be the concatenation of the paper title and abstract. 
+  
+    1) Using `keywords_re`, find all keywords that occur in `pt_i`, and iterate through every matching keyword, 'match_kwd` 
+    
+        1) Compute the Cosine Similarity between the embeddings corresponding to `pt_i` and the `match_kwd` and store the result as `match_score`.
+        2) Our search service will primarily receive keywords relating to the field of computer science. Therefore, we want to prioritize CS-focused keywords in our assignment algorithm. To do this, we penalize keywords that appear frequently in non-CS papers. We do this by dividing `match_score` by its squre root: 
+        
+            ```match_score /= sqrt(match_score)```
+    2) Keep the 9 _unique_ keywords with the highest match scores. To do so, we first we then use DBSCAN clustering on the our keyword matches. If any subset of keywords fall into the same cluster, we keep only one of the keywords. Once we've filtered out "duplicate" keywords, we select the top 9 of our remaining keywords.
+    3) For each of the 9 keywords, `unique_kwd` and its corresponding match score, `match_score`, store the entry `(paper_i, unique_kwd, match_score)` in a MySQL Table.
+
 ### 3: Find papers by Keywords
 ![Generate Embeddings](/figures/3_FindPapers.png)
