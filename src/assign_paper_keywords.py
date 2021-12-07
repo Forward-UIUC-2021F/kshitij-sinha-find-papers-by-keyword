@@ -6,7 +6,7 @@ import numpy.linalg as la
 from sklearn.cluster import DBSCAN
 
 from trie import construct_trie, construct_re, get_matches
-from utils import read_pickle_file, get_top_k, concat_paper_info, standardize_non_ascii
+from utils import read_pickle_file, read_json_file, get_top_k, concat_paper_info, standardize_non_ascii
 
 def normalize_embs(emb_arr):
     emb_norms = la.norm(emb_arr, axis=1)
@@ -20,8 +20,9 @@ data_root_dir = '../data/'
   
 golden_keywords_file = data_root_dir + "golden_words.csv" 
 
-paper_embeddings_file = data_root_dir + "SB_paper_embeddings.pickle"
-keyword_embeddings_file = data_root_dir + "springer_keyword_embs.pickle"
+paper_embeddings_file = data_root_dir + "paper_embs.pickle"
+paper_id_to_embeddings_file = data_root_dir + "paper_id_to_ind.json"
+keyword_embeddings_file = data_root_dir + "keyword_embs.pickle"
 
 word_to_other_freq_file = data_root_dir + "other_freqs.pickle"
 
@@ -29,6 +30,7 @@ word_to_other_freq_file = data_root_dir + "other_freqs.pickle"
 print("Loading and preprocessing data")
 
 paper_embeddings = read_pickle_file(paper_embeddings_file) 
+paper_id_to_emb_ind = read_json_file(paper_id_to_embeddings_file)
 
 keyword_embeddings = read_pickle_file(keyword_embeddings_file)
 keyword_embeddings = normalize_embs(keyword_embeddings)
@@ -72,11 +74,10 @@ keywords_trie = construct_trie(golden_keywords)
 keywords_re = construct_re(keywords_trie)
 print("Starting paper keyword extraction: ")
 
-p_i = 0
 # For every paper, finds top keyword matches. Stores matches in database
 # Every row in database has paper, keyword, and match score
 # For every paper, removes duplicate keywords using clustering
-for paper in paper_metadata[:len(paper_embeddings)]:
+for p_i, paper in enumerate(paper_metadata):
     paper_id = paper['id']
     raw_text = concat_paper_info(paper['title'], paper['abstract'])
 
@@ -94,9 +95,10 @@ for paper in paper_metadata[:len(paper_embeddings)]:
     match_embs = keyword_embeddings[match_ids]
 
     try:
-        paper_embedding = paper_embeddings[paper_id]
+        paper_embedding_ind = paper_id_to_emb_ind[paper_id]
+        paper_embedding = paper_embeddings[paper_embedding_ind]
     except IndexError:
-        print(f"Could not find paper at index {paper_id}")
+        print(f"Could not find paper embedding at index {paper_id}")
         continue
 
     paper_embedding = normalize_vec(paper_embedding)
@@ -166,8 +168,6 @@ for paper in paper_metadata[:len(paper_embeddings)]:
         keyword_score = str(kw_t[1])
         insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
         mycursor.execute(insert_sql, [paper_id, keyword_id, keyword_score])
-
-    p_i += 1
 
 print(f"{p_i} papers analyzed")
 mydb.commit()

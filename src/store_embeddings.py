@@ -5,7 +5,7 @@ from file_readers.keyword_file_reader import KeywordFileReader
 from file_readers.paper_file_reader import PaperFileReader
 
 from sentence_transformers import SentenceTransformer
-from utils import write_pickle_data, concat_paper_info
+from utils import write_pickle_data, write_json_data, concat_paper_info
 
 
 def main():
@@ -22,13 +22,14 @@ def main():
     # )
 
     # keywords, paper_text = get_data_from_database(mydb)
+    out_dir = "../tmp/"
     keyword_file_reader = KeywordFileReader("id", "keyword", "frequency")
     keyword_data = keyword_file_reader.read_file("../data/Keywords-Springer-83K.csv")
-    store_keyword_embeddings(keyword_data, "../data/keyword_embs.pickle")
+    store_keyword_embeddings(keyword_data, out_dir)
 
     paper_file_reader = PaperFileReader("id", "title", "abstract")
     paper_data = paper_file_reader.read_file("../data/filtered_arxiv.json")
-    store_paper_embeddings(paper_data, "../data/paper_embs.pickle")
+    store_paper_embeddings(paper_data, out_dir)
 
 def get_data_from_database(database: MySQLConnection):
     dictcursor = database.cursor(dictionary=True)
@@ -51,7 +52,7 @@ def get_data_from_database(database: MySQLConnection):
 
     return keywords, paper_text
 
-def store_paper_embeddings(paper_data: dict, out_file: str):
+def store_paper_embeddings(paper_data: dict, out_dir: str):
     """
     Stores the paper embeddings and paper meta into pickle files
 
@@ -59,6 +60,7 @@ def store_paper_embeddings(paper_data: dict, out_file: str):
         paper_data: dictionary containing paper title and abstract, using the folloing schema:
             [
                 {
+                    "id": "paper_id"
                     "title": "Sparsity-certifying Graph Decompositions",
                     "abstract": "  We describe a new algorithm, the $(k,\\ell)$-pebble game ..."
                 },
@@ -72,13 +74,14 @@ def store_paper_embeddings(paper_data: dict, out_file: str):
     paper_raw = [concat_paper_info(t['title'], t['abstract']) for t in paper_data]
 
     paper_embeddings = model.encode(paper_raw, show_progress_bar=True)
+    id_to_emb_ind = {paper["id"]: ind for ind, paper in enumerate(paper_data)}
 
     print("Done. Saving data")
-    write_pickle_data(paper_embeddings, out_file)
+    write_pickle_data(paper_embeddings, out_dir + "paper_embs.pickle")
+    write_json_data(id_to_emb_ind, out_dir + "paper_id_to_ind.json")
 
 
-
-def store_keyword_embeddings(keyword_data: str, out_file):
+def store_keyword_embeddings(keyword_data: str, out_dir):
     """
     Stores the keywords embeddings and keyword meta into pickle files
 
@@ -86,9 +89,11 @@ def store_keyword_embeddings(keyword_data: str, out_file):
         keywords_data: dictionary of keywords, using the following schema:
             [
                 {
+                    "id": "keyword_id",
                     "keyword": "machine learning",
                 },
                 {
+                    "id": "keyword_id",
                     "keyword": "deep learning",
                 }
                 ...
@@ -102,7 +107,7 @@ def store_keyword_embeddings(keyword_data: str, out_file):
     keyword_embeddings = model.encode(keywords, show_progress_bar=True)
 
     print("Done. Saving data")
-    write_pickle_data(keyword_embeddings, out_file)
+    write_pickle_data(keyword_embeddings, out_dir + "keyword_embs.pickle")
 
 
 if __name__ == "__main__":
