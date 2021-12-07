@@ -1,4 +1,8 @@
 import mysql.connector
+from mysql.connector.connection import MySQLConnection
+
+from file_readers.keyword_file_reader import KeywordFileReader
+from file_readers.paper_file_reader import PaperFileReader
 
 from sentence_transformers import SentenceTransformer
 from utils import write_pickle_data, concat_paper_info
@@ -10,13 +14,24 @@ def main():
     accessed from a database
     """
 
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="forward",
-        password="forward",
-        database="assign_paper_kwds"
-    )
-    dictcursor = mydb.cursor(dictionary=True)
+    # mydb = mysql.connector.connect(
+    #     host="localhost",
+    #     user="forward",
+    #     password="forward",
+    #     database="assign_paper_kwds"
+    # )
+
+    # keywords, paper_text = get_data_from_database(mydb)
+    keyword_file_reader = KeywordFileReader("id", "keyword", "frequency")
+    keyword_data = keyword_file_reader.read_file("../data/Keywords-Springer-83K.csv")
+    store_keyword_embeddings(keyword_data, "../data/keyword_embs.pickle")
+
+    paper_file_reader = PaperFileReader("id", "title", "abstract")
+    paper_data = paper_file_reader.read_file("../data/filtered_arxiv.json")
+    store_paper_embeddings(paper_data, "../data/paper_embs.pickle")
+
+def get_data_from_database(database: MySQLConnection):
+    dictcursor = database.cursor(dictionary=True)
 
     dictcursor.execute("""
         SELECT keyword
@@ -27,16 +42,14 @@ def main():
 
     dictcursor.execute("""
         SELECT id, title, abstract
-        FROM Publication
+        FROM Publication Publication
     """)
     paper_text = dictcursor.fetchall()
 
-    store_keyword_embeddings(keywords, "springer_keyword_embs.pickle")
-    store_paper_embeddings(paper_text, "SB_paper_embeddings.pickle")
-
-    mydb.commit()
+    database.commit()
     dictcursor.close()
 
+    return keywords, paper_text
 
 def store_paper_embeddings(paper_data: dict, out_file: str):
     """
