@@ -53,12 +53,8 @@ The goal of this step is receive a set of query keywords and output a list of re
 
 1) Initially, we receive a set of `n` keywords `k_1...k_n`
 2) For any _parent_ keyword `k_i`, we find the top-10 _similar_ keywords `sk_i,1 sk_i,10` using precomputed Normalized-PMI (NPMI) scores. We do this for every keyword and store the list of similar keywords `sk_0,0...sk_n,10`. We also store the NPMI score between the every _parent_ keyword `k_i` and _similar_ keyword `sk_i,j`, storing these scores in a list: `npmi_0,0...npmi_n,10`.
-3) For every similar keyword `sk_i,j`, we find all the research papers from `Publication_FoS`, `p_i,j,k` and it's corresponding Cosine Similarity match score `cs_i,j,k`. Every paper also has a corresponding citation count `cit_i,j,k`.
+3) For every similar keyword `sk_i,j`, we find all the research papers from `Publication_FoS`, `p_k` and it's corresponding Cosine Similarity match score `cs_k`. Every paper also has a corresponding citation count `cit_k`.
 4) We finally compute the rank score for paper `p` like so.
-```
-rank_score(p_i,j,k) = cit_i,j,k * 
-  sum(
-    max(npmi_i,j * cs_i,j,k)
-  )
 
-```
+
+![Generate Embeddings](/figures/rank_scores.png)
