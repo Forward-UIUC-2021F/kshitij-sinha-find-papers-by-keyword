@@ -1,6 +1,7 @@
 import re
 import string
 import pickle
+import json
 from random import randrange
 import unicodedata
 
@@ -37,6 +38,17 @@ def read_pickle_file(data_file):
 def write_pickle_data(data, out_file):
     with open(out_file, 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+def write_json_data(data, out_file):
+    with open(out_file, 'w') as f:
+        json.dump(data, f)
+
+def read_json_file(data_file):
+    with open(data_file, 'rb') as f:
+        data = json.load(f)
+
+    return data
+
 
 
 

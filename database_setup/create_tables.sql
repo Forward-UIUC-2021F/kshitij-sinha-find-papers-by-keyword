@@ -7,14 +7,13 @@ CREATE TABLE FoS(
 );
 
 CREATE TABLE Publication(
-    id INT PRIMARY KEY,
-    arxiv_id VARCHAR(100),
+    id VARCHAR(300) PRIMARY KEY,
     title TEXT,
     abstract TEXT
 );
 
 CREATE TABLE Publication_FoS (
-    Publication_id INT,
+    Publication_id VARCHAR(300),
     FoS_id INT,
     score DOUBLE,
     FOREIGN KEY (publication_id) REFERENCES Publication(id) ON DELETE CASCADE,
