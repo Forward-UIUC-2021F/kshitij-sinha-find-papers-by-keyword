@@ -1,5 +1,6 @@
+from file_readers.paper_file_reader import PaperFileReader
+from file_readers.keyword_file_reader import KeywordFileReader
 import csv
-import json
 import mysql.connector
 import argparse
 
@@ -42,47 +43,31 @@ def main():
 
 
 def store_springer_keywords(keywords_filepath: str, cursor):
+    file_reader = KeywordFileReader("id", "keyword", "frequency")
+    
     print("Loading keyword file")
-    with open(keywords_filepath, newline='') as f:
-        keyword_data = list(csv.DictReader(f, quotechar="|"))
 
-    metadata = []
-
-    for ind, keyword_entry in enumerate(keyword_data):
-        metadata.append({
-            "keyword": keyword_entry['keyword'],
-            "id": ind,
-            "frequency": keyword_entry["frequency"],
-        })
+    keyword_data = file_reader.read_file(keywords_filepath)
 
     print("Saving to table FoS")
 
     sql = "REPLACE INTO FoS (id, keyword, frequency) VALUES (%(id)s, %(keyword)s, %(frequency)s)"
-    cursor.executemany(sql, metadata)
+    cursor.executemany(sql, keyword_data)
 
 def store_filtered_arxiv(papers_filepath: str, cursor):
+    file_reader = PaperFileReader("id", "title", "abstract")
+    
     print("Loading paper file")
-    with open(papers_filepath) as f:
-        paper_json = json.load(f)
 
-    metadata = []
-
-    for ind, paper in enumerate(paper_json):
-        entry = {
-            'id': ind,
-            'arxiv_id': paper['id'],
-            'title': paper['title'],
-            'abstract': paper['abstract'],
-        }
-        metadata.append(entry)
+    paper_data = file_reader.read_file(papers_filepath)
 
     print("Saving to table Publication")
-    
+
     sql = """
-    REPLACE INTO Publication (id, arxiv_id, title, abstract)
-    VALUES (%(id)s, %(arxiv_id)s, %(title)s, %(abstract)s)
+    REPLACE INTO Publication (id, title, abstract)
+    VALUES (%(id)s, %(title)s, %(abstract)s)
     """
-    cursor.executemany(sql, metadata)
+    cursor.executemany(sql, paper_data)
 
 
 if __name__ == "__main__":
