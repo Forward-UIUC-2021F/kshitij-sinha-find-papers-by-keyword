@@ -45,7 +45,20 @@ Every paper is then assigned a set of keywords that best describe the keywords c
         
             ```match_score /= sqrt(match_score)```
     2) Keep the 9 _unique_ keywords with the highest match scores. To do so, we first we then use DBSCAN clustering on the our keyword matches. If any subset of keywords fall into the same cluster, we keep only one of the keywords. Once we've filtered out "duplicate" keywords, we select the top 9 of our remaining keywords.
-    3) For each of the 9 keywords, `unique_kwd` and its corresponding match score, `match_score`, store the entry `(paper_i, unique_kwd, match_score)` in a MySQL Table.
+    3) For each of the 9 keywords, `unique_kwd` and its corresponding match score, `match_score`, store the entry `(paper_i, unique_kwd, match_score)` in a MySQL Table called `Publication_FoS`.
 
 ### 3: Find papers by Keywords
 ![Generate Embeddings](/figures/3_FindPapers.png)
+The goal of this step is receive a set of query keywords and output a list of research papers that best match the query keywords. We do this by computing a `rank_score` for each paper using data computed from previous stages of this module.
+
+1) Initially, we receive a set of `n` keywords `k_1...k_n`
+2) For any _parent_ keyword `k_i`, we find the top-10 _similar_ keywords `sk_i,1 sk_i,10` using precomputed Normalized-PMI (NPMI) scores. We do this for every keyword and store the list of similar keywords `sk_0,0...sk_n,10`. We also store the NPMI score between the every _parent_ keyword `k_i` and _similar_ keyword `sk_i,j`, storing these scores in a list: `npmi_0,0...npmi_n,10`.
+3) For every similar keyword `sk_i,j`, we find all the research papers from `Publication_FoS`, `p_i,j,k` and it's corresponding Cosine Similarity match score `cs_i,j,k`. Every paper also has a corresponding citation count `cit_i,j,k`.
+4) We finally compute the rank score for paper `p` like so.
+```
+rank_score(p_i,j,k) = cit_i,j,k * 
+  sum(
+    max(npmi_i,j * cs_i,j,k)
+  )
+
+```
