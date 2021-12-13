@@ -64,6 +64,49 @@ def store_keywords(keyword_ids, cur, make_copy=True):
 
     cur.execute(append_given_sql, append_given_query_params)
 
+def cmopute_publication_ranks(cur):
+    """
+    Computes and stores score for each publication
+
+    Arguments:
+    - cur: db cursor
+
+    Returns: None
+
+
+    Each publication has an associated score for each input keyword.
+    The score between an input keyword and a paper is computed by determining if there is any match between the top ten similar keywords for the input keyword and the paper's keyword assignments (see assign_paper_kwds.py for details on  how keywords are assigned to papers).
+
+    The maximum scoring match is picked and the final score for an input
+    keyword is computed as max_npmi * citation. A score is computed for each
+    publication-keyword pair.
+    """
+
+    drop_table(cur, "Publication_Rank_Scores")
+    create_publication_ranks_sql = """
+        CREATE TEMPORARY TABLE Publication_Rank_Scores (
+            Publication_id VARCHAR(300),
+            title TEXT,
+            total_score DOUBLE,
+            PRIMARY KEY(Publication_id)
+        )
+
+        SELECT Publication_id, title, SUM(max_score) as total_score
+        FROM
+            (
+            SELECT parent_id, Publication.title, Publication_id, MAX(npmi * score) as max_score
+
+            FROM Top_Keywords
+            LEFT JOIN Publication_FoS ON id = Publication_FoS.FoS_id
+            LEFT JOIN Publication on Publication_FoS.Publication_id = Publication.id
+
+            GROUP BY parent_id, Publication_id
+            ) as keyword_paper_score
+        GROUP BY Publication_id
+        ORDER BY total_score DESC
+    """
+    cur.execute(create_publication_ranks_sql)
+
 def rank_papers_keyword(keyword, cur):
     # Aggregate scores for each author
     get_author_ranks_sql = """
