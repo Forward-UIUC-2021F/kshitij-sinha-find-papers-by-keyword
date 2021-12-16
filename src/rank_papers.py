@@ -1,7 +1,7 @@
 from utils import gen_sql_in_tup, return_print_err, copy_temporary_table, drop_view, drop_table
 import mysql.connector
 
-def store_keywords(keyword_ids, cur, make_copy=True):
+def store_keywords(keyword_ids: tuple, cur, make_copy=True):
     """
     Stores top 10 similar keywords for each input keyword
     Arguments:
@@ -19,7 +19,6 @@ def store_keywords(keyword_ids, cur, make_copy=True):
 
     drop_table(cur, "Top_Keywords")
     get_related_keywords_sql = """
-        SET @kw_rank := 1, @current_parent := -1;
         
         CREATE TABLE Top_Keywords (
             parent_id INT,
@@ -64,7 +63,7 @@ def store_keywords(keyword_ids, cur, make_copy=True):
 
     cur.execute(append_given_sql, append_given_query_params)
 
-def cmopute_publication_ranks(cur):
+def compute_publication_ranks(cur):
     """
     Computes and stores score for each publication
 
@@ -82,6 +81,9 @@ def cmopute_publication_ranks(cur):
     publication-keyword pair.
     """
 
+    # Some keywords are never paired with publications in assign_paper_kwds.py
+    # Thus, some similar keywords are matched with NULL publication rows
+    # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
     drop_table(cur, "Publication_Rank_Scores")
     create_publication_ranks_sql = """
         CREATE TEMPORARY TABLE Publication_Rank_Scores (
@@ -97,7 +99,7 @@ def cmopute_publication_ranks(cur):
             SELECT parent_id, Publication.title, Publication_id, MAX(npmi * score) as max_score
 
             FROM Top_Keywords
-            LEFT JOIN Publication_FoS ON id = Publication_FoS.FoS_id
+            JOIN Publication_FoS ON id = Publication_FoS.FoS_id
             LEFT JOIN Publication on Publication_FoS.Publication_id = Publication.id
 
             GROUP BY parent_id, Publication_id
@@ -150,7 +152,12 @@ if __name__ == '__main__':
     )
     cur = db.cursor()
 
-    top_authors = rank_papers_keyword("polynomial time", cur)
-    print(*top_authors, sep="\n")
+    store_keywords((0, 1, 2, 3, 4, 5, 6, 7), cur)
+    compute_publication_ranks(cur)
+
+    db.commit()
+
+    # top_authors = rank_papers_keyword("polynomial time", cur)
+    # print(*top_authors, sep="\n")
 
     cur.close()
