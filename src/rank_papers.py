@@ -94,14 +94,13 @@ def get_ranked_publications(cur, search_limit: int):
     # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
     drop_table(cur, "Publication_Rank_Scores")
     get_ranked_publications_sql = """
-        SELECT Publication_id, title, SUM(max_score) as total_score
+        SELECT Publication_id, SUM(max_score) as total_score
         FROM
             (
-            SELECT parent_id, Publication.title, Publication_id, MAX(npmi * score) as max_score
+            SELECT parent_id, Publication_id, MAX(npmi * score) as max_score
 
             FROM Top_Keywords
             JOIN Publication_FoS ON id = Publication_FoS.FoS_id
-            LEFT JOIN Publication on Publication_FoS.Publication_id = Publication.id
 
             GROUP BY parent_id, Publication_id
             ) as keyword_paper_score
@@ -123,7 +122,7 @@ if __name__ == '__main__':
     )
     cur = db.cursor()
 
-    store_keywords((0, 2), cur)
+    store_keywords((0, 1, 2, 3, 4, 5, 6, 7, 8, 9), cur)
     ranked_publications = get_ranked_publications(cur, 20)
     print(ranked_publications)
 
