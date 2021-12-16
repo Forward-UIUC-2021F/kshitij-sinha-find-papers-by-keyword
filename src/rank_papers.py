@@ -63,36 +63,37 @@ def store_keywords(keyword_ids: tuple, cur, make_copy=True):
 
     cur.execute(append_given_sql, append_given_query_params)
 
-def compute_publication_ranks(cur):
+def get_ranked_publications(cur, search_limit: int):
     """
-    Computes and stores score for each publication
+    Computes keyword match scores for every publication and returns a list of publications
+    sorted in decreasing order of match score
 
     Arguments:
     - cur: db cursor
+    - search_limit: an integer specifying the number of top publication matches to return
 
     Returns: None
 
 
     Each publication has an associated score for each input keyword.
-    The score between an input keyword and a paper is computed by determining if there is any match between the top ten similar keywords for the input keyword and the paper's keyword assignments (see assign_paper_kwds.py for details on  how keywords are assigned to papers).
+    The score between an input keyword and a paper is computed by determining if 
+    there is any match between the top ten similar keywords for the input keyword 
+    and the paper's keyword assignments (see assign_paper_kwds.py for details on
+    how keywords are assigned to papers). The final score between a keyword and
+    a publication is the product of similairty of the keyword to the publication
+    and the npmi score describing the similarity of the keyword to the input keyword.
+    This product is store as max_score.
 
-    The maximum scoring match is picked and the final score for an input
-    keyword is computed as max_npmi * citation. A score is computed for each
-    publication-keyword pair.
+    
+    The total_score for a paper is the sum of max_scores for every keyword in the input query.
+    The final score for a paper (paper_score) is computed as total_score * citation.
     """
 
     # Some keywords are never paired with publications in assign_paper_kwds.py
     # Thus, some similar keywords are matched with NULL publication rows
     # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
     drop_table(cur, "Publication_Rank_Scores")
-    create_publication_ranks_sql = """
-        CREATE TEMPORARY TABLE Publication_Rank_Scores (
-            Publication_id VARCHAR(300),
-            title TEXT,
-            total_score DOUBLE,
-            PRIMARY KEY(Publication_id)
-        )
-
+    get_ranked_publications_sql = """
         SELECT Publication_id, title, SUM(max_score) as total_score
         FROM
             (
@@ -106,40 +107,10 @@ def compute_publication_ranks(cur):
             ) as keyword_paper_score
         GROUP BY Publication_id
         ORDER BY total_score DESC
+        LIMIT %s
     """
-    cur.execute(create_publication_ranks_sql)
-
-def rank_papers_keyword(keyword, cur):
-    # Aggregate scores for each author
-    get_author_ranks_sql = """
-        SELECT Publication.title, Publication.arxiv_id FROM Publication_FoS
-        LEFT JOIN Publication
-        ON Publication_FoS.Publication_id = Publication.id
-        LEFT JOIN FoS
-        ON Publication_FoS.FoS_id = FoS.id
-        WHERE FoS.keyword=%s
-        ORDER BY score DESC;
-    """
-    cur.execute(get_author_ranks_sql, (keyword, ))
-    author_ranks = cur.fetchall()
-
-    # res = [{
-    #     'id': t[0],
-    #     'name': t[1],
-    #     'score': t[2]
-    # } for t in author_ranks]
-
-    # top_author_ids = [t["id"] for t in res]
-
-    # author_id_to_idx = {}
-    # for i in range(len(top_author_ids)):
-    #     author_id = top_author_ids[i]
-    #     author_id_to_idx[author_id] = i
-
-    return author_ranks
-
-
-
+    cur.execute(get_ranked_publications_sql, (search_limit, ))
+    return cur.fetchall()
 
 if __name__ == '__main__':
 
@@ -152,12 +123,8 @@ if __name__ == '__main__':
     )
     cur = db.cursor()
 
-    store_keywords((0, 1, 2, 3, 4, 5, 6, 7), cur)
-    compute_publication_ranks(cur)
-
-    db.commit()
-
-    # top_authors = rank_papers_keyword("polynomial time", cur)
-    # print(*top_authors, sep="\n")
+    store_keywords((0, 2), cur)
+    ranked_publications = get_ranked_publications(cur, 20)
+    print(ranked_publications)
 
     cur.close()
