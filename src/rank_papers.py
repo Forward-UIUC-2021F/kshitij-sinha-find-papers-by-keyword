@@ -1,4 +1,4 @@
-from utils import gen_sql_in_tup, return_print_err, copy_temporary_table, drop_view, drop_table
+from utils import gen_sql_in_tup, drop_table
 import mysql.connector
 
 def store_keywords(keyword_ids: tuple, cur, make_copy=True):

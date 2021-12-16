@@ -109,16 +109,6 @@ def drop_table(cur, table_name):
     drop_table_sql = "DROP TABLE IF EXISTS " + table_name
     cur.execute(drop_table_sql)
 
-def drop_view(cur, view_name):
-    drop_view_sql = "DROP VIEW IF EXISTS " + view_name
-    cur.execute(drop_view_sql)
-
-def copy_temporary_table(cur, table_name):
-    cur.execute("""
-    CREATE TABLE """ + table_name + """_Copy
-    (SELECT * FROM """ + table_name + """)
-    """)
-
 def get_search_pattern(query):
     return "%" + query + "%"
 
