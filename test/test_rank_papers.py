@@ -1,7 +1,6 @@
 import unittest
 
-import src
-from src import paper_search_engine
+from src.rank_papers import PaperSearchEngine
 import mysql.connector
 
 class TestRankPapers(unittest.TestCase):
@@ -13,12 +12,9 @@ class TestRankPapers(unittest.TestCase):
             password="forward",
             database="assign_paper_kwds"
         )
-        cls.cur = db.cursor()
+        cls.search_engine = PaperSearchEngine(db)
 
-    @classmethod
-    def teatDownClass(cls):
-        cls.cur.close()
-
-
-    def setUp(self):
-        print("nothing")
+    def testOutputShape(self):
+        results = self.search_engine.get_relevant_papers_by_id((1,), 1)
+        self.assertEqual(len(results), 1)       # search_limit = 1
+        self.assertEqual(len(results[0]), 2)    # each entry is tuple of size 2

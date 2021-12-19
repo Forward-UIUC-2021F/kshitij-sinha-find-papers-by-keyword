@@ -1,24 +1,38 @@
-from utils import gen_sql_in_tup, drop_table
+from src.utils import gen_sql_in_tup, drop_table
 import mysql.connector
 
 class PaperSearchEngine:
-    def __init__(self, cur):
-        self.cur = cur
+    def __init__(self, db):
+        self.db = db
 
-    def get_relevant_papers_by_id(self, keyword_ids: tuple):
-        self._store_keywords(keyword_ids)
-        return self._get_ranked_publications()
+    def get_relevant_papers_by_id(self, keyword_ids: tuple, search_limit):
+        """
+        Finds top papers that match a set of query keywords and returns them as a list,
+        sorted in descending order by match scores
 
-    def _get_ranked_publications(self):
+        Arguments:
+        - cur: db cursor
+        - search_limit: an integer specifying the number of top publication matches to return
+        """
+        cur = self.db.cursor()
+        self._store_keywords(cur, keyword_ids)
+        results = self._get_ranked_publications(cur)[:search_limit]
+        cur.close()
+        return results
+
+    def _get_ranked_publications(self, cur):
         """
         Computes keyword match scores for every publication and returns a list of publications
-        sorted in decreasing order of match score
+        sorted in decreasing order of match score. 
+        Requires Top_Keywords table to exist, which is created by _store_keywords method
 
         Arguments:
         - cur: db cursor
         - search_limit: an integer specifying the number of top publication matches to return
 
-        Returns: None
+        Returns: A ranked list of tuples representing matched papers and their corresponding match score.
+        The list uses the following schema:
+            [(paper_id_1, paper_score_1), (paper_id_2, paper_score_2), ...]
 
         Each publication has an associated score for each input keyword.
         The score between an input keyword and a paper is computed by determining if 
@@ -36,7 +50,7 @@ class PaperSearchEngine:
         # Some keywords are never paired with publications in assign_paper_kwds.py
         # Thus, some similar keywords are matched with NULL publication rows
         # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
-        drop_table(self.cur, "Publication_Rank_Scores")
+        drop_table(cur, "Publication_Rank_Scores")
         get_ranked_publications_sql = """
             SELECT Publication_id, SUM(max_score) as total_score
             FROM
@@ -51,11 +65,11 @@ class PaperSearchEngine:
             GROUP BY Publication_id
             ORDER BY total_score DESC
         """
-        self.cur.execute(get_ranked_publications_sql)
-        return self.cur.fetchall()
+        cur.execute(get_ranked_publications_sql)
+        return cur.fetchall()
 
     
-    def _store_keywords(self, keyword_ids: tuple):
+    def _store_keywords(self, cur, keyword_ids: tuple):
         """
         Stores top 10 similar keywords for each input keyword
         Arguments:
@@ -104,8 +118,7 @@ class PaperSearchEngine:
             WHERE kw_rank <= 10
         """
         get_related_query_params = 2 * keyword_ids
-        self.cur.execute(get_related_keywords_sql, get_related_query_params)
-
+        cur.execute(get_related_keywords_sql, get_related_query_params)
 
         append_given_sql = """
             INSERT INTO Top_Keywords
@@ -115,7 +128,7 @@ class PaperSearchEngine:
 
         append_given_query_params = [id for id in keyword_ids for i in range(2)]
 
-        self.cur.execute(append_given_sql, append_given_query_params)
+        cur.execute(append_given_sql, append_given_query_params)
 
 if __name__ == '__main__':
 
@@ -126,10 +139,7 @@ if __name__ == '__main__':
       password="forward",
       database="assign_paper_kwds"
     )
-    cur = db.cursor()
 
-    searchEngine = PaperSearchEngine(cur)
+    searchEngine = PaperSearchEngine(db)
 
-    print(searchEngine.get_relevant_papers_by_id((1, 5)))
-
-    cur.close()
+    print(searchEngine.get_relevant_papers_by_id((1, 5), 5))
