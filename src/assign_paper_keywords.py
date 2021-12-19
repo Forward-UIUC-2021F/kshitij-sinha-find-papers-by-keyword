@@ -18,6 +18,11 @@ class PaperKeywordAssigner():
             paper_id_to_embeddings_file, keyword_embeddings_file, word_to_other_freq_file):
         ### Reading data from files ###
         print("Loading and preprocessing data")
+        with self.db.cursor(dictionary=True) as dictcursor:
+            paper_metadata = self._get_paper_data(dictcursor)
+            keyword_metadata = self._get_keyword_data(dictcursor)
+
+        keyword_to_id = {k["keyword"]: k["id"] for k in keyword_metadata}
 
         paper_embeddings = read_pickle_file(paper_embeddings_file)
         paper_id_to_emb_ind = read_json_file(paper_id_to_embeddings_file)
@@ -27,10 +32,8 @@ class PaperKeywordAssigner():
 
         # Frequency counts of keywords for non-cs papers from arxiv
         word_to_other_freq = read_pickle_file(word_to_other_freq_file)
-
-        with self.db.cursor(dictionary=True) as dictcursor:
-            paper_metadata = self._get_paper_data(dictcursor)
-            keyword_metadata = self._get_keyword_data(dictcursor)
+        word_id_to_other_freq = self._get_word_id_to_other_freq(
+            word_to_other_freq, keyword_to_id)
 
         """
         Keyword set formed from the set intersection of
@@ -43,8 +46,6 @@ class PaperKeywordAssigner():
 
         keywords_trie = construct_trie(golden_keywords)
         keywords_re = construct_re(keywords_trie)
-
-        keyword_to_id = {k["keyword"]: k["id"] for k in keyword_metadata}
 
         # For every paper, finds top keyword matches. Stores matches in database
         # Every row in database has paper, keyword, and match score
@@ -59,44 +60,16 @@ class PaperKeywordAssigner():
             paper_embedding = paper_embeddings[paper_embedding_ind]
             paper_embedding = self._normalize_vec(paper_embedding)
 
-            # Get candidate keywords by checking occurrence
-            keyword_matches = get_matches(raw_text, keywords_re, True)
-            if len(keyword_matches) == 0:
-                continue
-            try:
-                # Keyword_matches stored as [(<keyword>, <id>), ...]
-                match_ids = [keyword_to_id[match[0]]
-                             for match in keyword_matches]
-            except KeyError:
-                continue
-
+            match_ids = self._get_keyword_match_ids(
+                raw_text, keywords_re, keyword_to_id)
             # Uses assmuption that ids are the indices of the embedding
             match_embs = keyword_embeddings[match_ids]
-
             # Compute dot of every match embedding with this paper's embedding
             sim_scores = np.dot(match_embs, paper_embedding)
 
-            # Keyword scores will be stored as: (<keyword_id, match_score>, ...)
-            keyword_scores = []
-            for i in range(len(match_ids)):
-                m_t = keyword_matches[i]
-                keyword = m_t[0]
-
-                kw_score = sim_scores[i]
-
-                # Checking if current keyword appears in non-cs papers in arxiv corpus
-                if keyword in word_to_other_freq:
-                    other_freq = word_to_other_freq[keyword]
-
-                    # Penalize general words
-                    if other_freq >= 1000:
-                        kw_score /= math.sqrt(other_freq)
-
-                kw_t = (match_ids[i], kw_score)
-                keyword_scores.append(kw_t)
+            keyword_scores = self._get_penalized_keyword_scores(zip(match_ids, sim_scores), word_id_to_other_freq)
 
             # Select top-k-scoring keywords
-            max_keywords = 9
             query_keywords = 17
             top_keywords = get_top_k(keyword_scores, min(
                 query_keywords, len(keyword_scores) - 1), lambda t: t[1])
@@ -104,41 +77,135 @@ class PaperKeywordAssigner():
             selected_keyword_ids = [t[0] for t in top_keywords]
             selected_keyword_embs = keyword_embeddings[selected_keyword_ids]
 
-            # Removing dupicate keywords
-            db = DBSCAN(eps=0.47815, min_samples=2).fit(selected_keyword_embs)
-            labels = db.labels_
+            max_keywords = 9
+            unique_top_keywords = self._get_unique_keywords(top_keywords, selected_keyword_embs, max_keywords)
 
-            curr_groups = set()
-            unique_top_keywords = []
-
-            for i in range(len(top_keywords)):
-                if len(unique_top_keywords) >= max_keywords:
-                    break
-
-                group_idx = labels[i]
-
-                if group_idx == -1:
-                    unique_top_keywords.append(top_keywords[i])
-                elif group_idx not in curr_groups:
-                    curr_groups.add(group_idx)
-                    unique_top_keywords.append(top_keywords[i])
+            self._add_paper_assignments_to_database(cursor, paper_id, unique_top_keywords)
 
             if p_i % 1000 == 0:
                 print("On " + str(p_i) + "th paper")
-                top_keywords = unique_top_keywords
-                print("The top keywords: ", top_keywords)
-                print("-" * 10)
 
-            # Insert data into db
-            for kw_t in top_keywords:
-                keyword_id = str(kw_t[0])
-                keyword_score = str(kw_t[1])
-                insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
-                cursor.execute(
-                    insert_sql, [paper_id, keyword_id, keyword_score])
-
+        cursor.close()
         print(f"{p_i} papers analyzed")
         self.db.commit()
+
+    def _add_paper_assignments_to_database(self, cur, paper_id, keywords):
+        """
+        Adds rows to MySQL database
+
+        Arguments:
+        - cur: mysql.connector database cursor
+        - paper_id: the id of the paper for which keywords have been assigned
+        - keywords: a list of tuples with the format (keyword_id, keyword_score) that have been assigned
+        to the paper
+
+        Returns:
+        - None. A adds rows to the database for the columns Publication_id, FoS_id, score. For the i'th row,
+        these columns correspond to the inputs paper_id, keywords[i][0], keywords[i][1], respectively
+        """
+        for keyword_id, keyword_score in keywords:
+            keyword_id = str(keyword_id)
+            keyword_score = str(keyword_score)
+            insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
+            cur.execute(insert_sql, [paper_id, keyword_id, keyword_score])
+
+    def _get_unique_keywords(self, keywords, embeddings, max_keywords):
+        """
+        Retruns a list of keywords that are mathematically unique using DBSCAN clustering.
+        The input embedding vectors will be grouped into clusters using DBSCAN. Out of every cluster,
+        only one representative keyword will be retreieved and returned from this method, up to a total
+        of "max_keywords" returned.
+
+        Arguments:
+        - keywords: A list of keywords
+        - embeddings: A list of keyword embeddings. This list should be parallel to keywords.
+        - max_keywords: The maximum unique keywords to retrieve. The length of the returned list
+        will be no greater than max keywords
+
+        Returns:
+        - A list of keywords that is a subset of the input, "keywords." These keywords are each unique
+        from each other, based on DBSCAN clustering. 
+        """
+        db = DBSCAN(eps=0.47815, min_samples=2).fit(embeddings)
+        labels = db.labels_
+
+        curr_groups = set()
+        unique_top_keywords = []
+
+        for i, keyword in enumerate(keywords):
+            if len(unique_top_keywords) >= max_keywords:
+                break
+
+            group_idx = labels[i]
+
+            if group_idx == -1:
+                unique_top_keywords.append(keyword)
+            elif group_idx not in curr_groups:
+                curr_groups.add(group_idx)
+                unique_top_keywords.append(keyword)
+
+        return unique_top_keywords
+
+    def _get_penalized_keyword_scores(self, matches, word_id_to_other_freq):
+        """
+        Returns a tuple of keyword/score pairs, but penalizes keyword matches that appear frequently (more than 1000 times) in non-CS papers.
+        For such keywords, the keyword score is divided by its square root
+
+        Arguments:
+        - matches: A list of tuples representing matches. Every tuple should be in the format (keyword_id, match_score), where match_score is the
+        similarity score betwen keyword_id and a paper.
+        The i'th element of match_scores should be the score corresponding to the i'th element of keyword_ids
+        - word_id_to_other__freq: a dictionary mapping a keyword to its frequency in non-CS papers. The keys of this dictionary are keyword ids
+
+        Returns:
+        - A list of tuples in the same format as the input argument "matches". However, the return list contains penalized match scores based on
+        the specification above
+        """
+        # Keyword scores will be stored as: (<keyword_id, match_score>, ...)
+        keyword_scores = []
+        for match_id, kw_score in matches:
+            # Checking if current keyword appears in non-cs papers in arxiv corpus
+            if match_id in word_id_to_other_freq:
+                other_freq = word_id_to_other_freq[match_id]
+
+                # Penalize general words
+                if other_freq >= 1000:
+                    kw_score /= math.sqrt(other_freq)
+
+            kw_t = (match_id, kw_score)
+            keyword_scores.append(kw_t)
+
+        return keyword_scores
+
+    def _get_keyword_match_ids(self, raw_text, keywords_re, keyword_to_id: dict):
+        """
+        Finds all keywords that appear in raw_text and returns the ids of the matched keywords
+        """
+        # Get candidate keywords by checking occurrence
+        keyword_matches = get_matches(raw_text, keywords_re, True)
+        match_ids = []
+        for keyword, match_freq in keyword_matches:
+            if keyword in keyword_to_id:
+                match_ids.append(keyword_to_id[keyword])
+
+            # if match is not in keyword_to_id, then match doesn't exist in our original keyword dataset
+            # so we skip the corresponding matched keyword
+
+        return match_ids
+
+    def _get_word_id_to_other_freq(self, word_to_other_freqs, word_to_id):
+        """
+        Converts a map from words to frequencies into a map of word ids to other frequcies
+        """
+        word_id_to_other_freq = {}
+        for word, freq in word_to_other_freqs.items():
+            if word in word_to_id:
+                word_id_to_other_freq[word_to_id[word]] = freq
+
+            # If word is not in word_to_id, then word doesn't exist in our keyword dataset and will never
+            # be matched with a paper. We can skip adding this word to the dictionary
+
+        return word_id_to_other_freq
 
     def _get_paper_data(self, dictcursor):
         dictcursor.execute("""
@@ -167,7 +234,7 @@ def main():
         host="localhost",
         user="forward",
         password="forward",
-        database="assign_paper_kwds"
+        database="assign_1"
     )
 
     data_root_dir = 'data/'
@@ -182,7 +249,7 @@ def main():
 
     assigner = PaperKeywordAssigner(mydb)
     assigner.assign_paper_keywords(golden_keywords_file, paper_embeddings_file,
-                                   paper_id_to_embeddings_file, keyword_embeddings_file, 
+                                   paper_id_to_embeddings_file, keyword_embeddings_file,
                                    word_to_other_freq_file)
 
 
