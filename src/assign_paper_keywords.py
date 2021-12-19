@@ -50,7 +50,7 @@ class PaperKeywordAssigner():
         # For every paper, finds top keyword matches. Stores matches in database
         # Every row in database has paper, keyword, and match score
         # For every paper, removes duplicate keywords using clustering
-        cursor = self.db.cursor()
+        insert_data = []
         print("Starting paper keyword extraction: ")
         for p_i, paper in enumerate(paper_metadata):
             paper_id = paper['id']
@@ -80,34 +80,20 @@ class PaperKeywordAssigner():
             max_keywords = 9
             unique_top_keywords = self._get_unique_keywords(top_keywords, selected_keyword_embs, max_keywords)
 
-            self._add_paper_assignments_to_database(cursor, paper_id, unique_top_keywords)
+            # self._add_paper_assignments_to_database(cursor, paper_id, unique_top_keywords)
+            for keyword_id, keyword_score in unique_top_keywords:
+                insert_data.append((paper_id, str(keyword_id), str(keyword_score)))
 
             if p_i % 1000 == 0:
                 print("On " + str(p_i) + "th paper")
 
+        cursor = self.db.cursor()
+        insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
+        cursor.executemany(insert_sql, insert_data)
         cursor.close()
+
         print(f"{p_i} papers analyzed")
         self.db.commit()
-
-    def _add_paper_assignments_to_database(self, cur, paper_id, keywords):
-        """
-        Adds rows to MySQL database
-
-        Arguments:
-        - cur: mysql.connector database cursor
-        - paper_id: the id of the paper for which keywords have been assigned
-        - keywords: a list of tuples with the format (keyword_id, keyword_score) that have been assigned
-        to the paper
-
-        Returns:
-        - None. A adds rows to the database for the columns Publication_id, FoS_id, score. For the i'th row,
-        these columns correspond to the inputs paper_id, keywords[i][0], keywords[i][1], respectively
-        """
-        for keyword_id, keyword_score in keywords:
-            keyword_id = str(keyword_id)
-            keyword_score = str(keyword_score)
-            insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
-            cur.execute(insert_sql, [paper_id, keyword_id, keyword_score])
 
     def _get_unique_keywords(self, keywords, embeddings, max_keywords):
         """
