@@ -72,10 +72,12 @@ class PaperSearchEngine:
     def _store_keywords(self, cur, keyword_ids: tuple):
         """
         Stores top 10 similar keywords for each input keyword
+
         Arguments:
         - keyword_ids: list of ids of input keywords
         - cur: db cursor
-        Returns: None. each entry in Top_Keywords table is of the form (parent_id, keyword_id, npmi).
+
+        Returns: None. Each entry in Top_Keywords table is of the form (parent_id, keyword_id, npmi).
         - parent_id: id of the original input keyword
         - keyword_id: id of similar keyword
         - npmi is a similarity score between the two keywords
