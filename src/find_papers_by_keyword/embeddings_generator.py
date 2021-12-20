@@ -1,21 +1,6 @@
 from sentence_transformers import SentenceTransformer
 
-from src.file_readers.keyword_file_reader import KeywordFileReader
-from src.file_readers.paper_file_reader import PaperFileReader
-
-from src.find_papers_by_keyword.utils import write_pickle_data, write_json_data, concat_paper_info
-
-def main():
-    storer = EmbeddingsGenerator()
-
-    out_dir = "tmp/"
-    keyword_file_reader = KeywordFileReader("id", "keyword", "frequency")
-    keyword_data = keyword_file_reader.read_file("data/Keywords-Springer-83K.csv")
-    storer.generate_keyword_embeddings(keyword_data[:10], out_dir)
-
-    paper_file_reader = PaperFileReader("id", "title", "abstract")
-    paper_data = paper_file_reader.read_file("data/filtered_arxiv.json")
-    storer.generate_paper_embeddings(paper_data[:10], out_dir)
+from .utils import concat_paper_info
 
 class EmbeddingsGenerator():
     def __init__(self):
@@ -72,6 +57,3 @@ class EmbeddingsGenerator():
         id_to_emb_ind = {keyword["id"]: ind for ind, keyword in enumerate(keyword_data)}
 
         return keyword_embeddings, id_to_emb_ind
-
-if __name__ == "__main__":
-    main()

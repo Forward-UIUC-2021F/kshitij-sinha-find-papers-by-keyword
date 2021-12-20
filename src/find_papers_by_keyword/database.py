@@ -19,3 +19,29 @@ class Database():
                 FROM Publication Publication
             """)
             return dictcursor.fetchall()
+
+    def store_paper_data(self, paper_data) -> None:
+        """
+        Stores paper_data as rows in database
+
+        Args:
+            paper_data: list of dictionaries containing paper data, using the folloing schema:
+                [
+                    {
+                        "id": str
+                        "title": str
+                        "abstract": str
+                        "citations": int
+                    },
+                    ...
+                ]
+        """
+        sql = """
+        REPLACE INTO Publication (id, title, abstract, citations)
+        VALUES (%(id)s, %(title)s, %(abstract)s, %(citations)s)
+        """
+
+        with self.db.cursor() as cursor:
+            cursor.executemany(sql, paper_data)
+
+        self.db.commit()

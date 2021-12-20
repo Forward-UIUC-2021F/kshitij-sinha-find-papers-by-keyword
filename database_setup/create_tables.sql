@@ -9,7 +9,8 @@ CREATE TABLE FoS(
 CREATE TABLE Publication(
     id VARCHAR(300) PRIMARY KEY,
     title TEXT,
-    abstract TEXT
+    abstract TEXT,
+    citations INT
 );
 
 CREATE TABLE Publication_FoS (
