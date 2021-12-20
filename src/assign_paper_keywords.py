@@ -8,7 +8,6 @@ from sklearn.cluster import DBSCAN
 from src.trie.utils import construct_trie, construct_re, get_matches
 from src.utils import read_pickle_file, read_json_file, get_top_k, concat_paper_info, standardize_non_ascii
 
-
 class PaperKeywordAssigner():
     def __init__(self, db):
         self.db = db
@@ -62,6 +61,11 @@ class PaperKeywordAssigner():
 
             match_ids = self._get_keyword_match_ids(
                 raw_text, keywords_re, keyword_to_id)
+            
+            if len(match_ids) == 0:
+                # No matches to assign
+                continue
+
             # Uses assmuption that ids are the indices of the embedding
             match_embs = keyword_embeddings[match_ids]
             # Compute dot of every match embedding with this paper's embedding
