@@ -36,6 +36,7 @@ class Database():
                     ...
                 ]
         """
+
         sql = """
         REPLACE INTO Publication (id, title, abstract, citations)
         VALUES (%(id)s, %(title)s, %(abstract)s, %(citations)s)
@@ -43,5 +44,27 @@ class Database():
 
         with self.db.cursor() as cursor:
             cursor.executemany(sql, paper_data)
+
+        self.db.commit()
+
+    def store_keyword_data(self, keyword_data) -> None:
+        """
+        Stores keyword_data as rows in database
+        
+        Args:
+            keyword_data: list of dictionaries containing keyword data, using the following schema:
+                [
+                    {
+                        "id": str
+                        "keyword": str
+                        "frequency" : int
+                    },
+                    ...
+                ]
+        """
+
+        sql = "REPLACE INTO FoS (id, keyword, frequency) VALUES (%(id)s, %(keyword)s, %(frequency)s)"
+        with self.db.cursor() as cursor:
+            cursor.executemany(sql, keyword_data)
 
         self.db.commit()
