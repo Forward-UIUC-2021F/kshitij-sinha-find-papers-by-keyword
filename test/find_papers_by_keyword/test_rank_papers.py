@@ -1,6 +1,6 @@
 import unittest
 
-from src.rank_papers import PaperSearchEngine
+from src.find_papers_by_keyword.rank_papers import PaperSearchEngine
 import mysql.connector
 
 class TestRankPapers(unittest.TestCase):

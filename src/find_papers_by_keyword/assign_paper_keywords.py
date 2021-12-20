@@ -5,8 +5,8 @@ import mysql.connector
 import numpy.linalg as la
 from sklearn.cluster import DBSCAN
 
-from src.trie.utils import construct_trie, construct_re, get_matches
-from src.utils import read_pickle_file, read_json_file, get_top_k, concat_paper_info, standardize_non_ascii
+from find_papers_by_keyword.trie.utils import construct_trie, construct_re, get_matches
+from find_papers_by_keyword.utils import read_pickle_file, read_json_file, get_top_k, concat_paper_info, standardize_non_ascii
 
 class PaperKeywordAssigner():
     def __init__(self, db):

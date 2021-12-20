@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 from src.file_readers.keyword_file_reader import KeywordFileReader
 from src.file_readers.paper_file_reader import PaperFileReader
 
-from src.utils import write_pickle_data, write_json_data, concat_paper_info
+from src.find_papers_by_keyword.utils import write_pickle_data, write_json_data, concat_paper_info
 
 def main():
     storer = EmbeddingsGenerator()
@@ -11,17 +11,17 @@ def main():
     out_dir = "tmp/"
     keyword_file_reader = KeywordFileReader("id", "keyword", "frequency")
     keyword_data = keyword_file_reader.read_file("data/Keywords-Springer-83K.csv")
-    storer.store_keyword_embeddings(keyword_data[:10], out_dir)
+    storer.generate_keyword_embeddings(keyword_data[:10], out_dir)
 
     paper_file_reader = PaperFileReader("id", "title", "abstract")
     paper_data = paper_file_reader.read_file("data/filtered_arxiv.json")
-    storer.store_paper_embeddings(paper_data[:10], out_dir)
+    storer.generate_paper_embeddings(paper_data[:10], out_dir)
 
 class EmbeddingsGenerator():
     def __init__(self):
         self.model = SentenceTransformer('bert-base-nli-mean-tokens')
 
-    def store_paper_embeddings(self, paper_data: dict, out_dir: str):
+    def generate_paper_embeddings(self, paper_data: dict):
         """
         Stores the paper embeddings and paper meta into pickle files
 
@@ -44,11 +44,9 @@ class EmbeddingsGenerator():
         paper_embeddings = self.model.encode(paper_raw, show_progress_bar=True)
         id_to_emb_ind = {paper["id"]: ind for ind, paper in enumerate(paper_data)}
 
-        print("Done. Saving data")
-        write_pickle_data(paper_embeddings, out_dir + "paper_embs.pickle")
-        write_json_data(id_to_emb_ind, out_dir + "paper_id_to_ind.json")
+        return paper_embeddings, id_to_emb_ind
 
-    def store_keyword_embeddings(self, keyword_data: str, out_dir):
+    def generate_keyword_embeddings(self, keyword_data: str):
         """
         Stores the keywords embeddings and keyword meta into pickle files
 
@@ -69,12 +67,11 @@ class EmbeddingsGenerator():
         """
         print("Getting embeddings for keywords")
 
-        model = SentenceTransformer('bert-base-nli-mean-tokens')
         keywords = [d['keyword'] for d in keyword_data]
         keyword_embeddings = self.model.encode(keywords, show_progress_bar=True)
+        id_to_emb_ind = {keyword["id"]: ind for ind, keyword in enumerate(keyword_data)}
 
-        print("Done. Saving data")
-        write_pickle_data(keyword_embeddings, out_dir + "keyword_embs.pickle")
+        return keyword_embeddings, id_to_emb_ind
 
 if __name__ == "__main__":
     main()
