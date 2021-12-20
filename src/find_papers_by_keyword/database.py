@@ -7,7 +7,7 @@ class Database():
     def get_keyword_data(self) -> dict:
         with self.db.cursor(dictionary=True) as dictcursor:
             dictcursor.execute("""
-                SELECT keyword
+                SELECT id, keyword
                 FROM FoS
             """)
             return dictcursor.fetchall()
@@ -66,5 +66,19 @@ class Database():
         sql = "REPLACE INTO FoS (id, keyword, frequency) VALUES (%(id)s, %(keyword)s, %(frequency)s)"
         with self.db.cursor() as cursor:
             cursor.executemany(sql, keyword_data)
+
+        self.db.commit()
+
+    def store_publication_fos(self, store_data) -> None:
+        """
+        Stores rows of data into table Publication_FoS
+
+        Args: a list of tuples representing rows of the table, using the following schema:
+            [(paper_id, keyword_id, match_score)]
+        """
+        sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
+
+        with self.db.cursor() as cursor:
+            cursor.executemany(sql, store_data)
 
         self.db.commit()

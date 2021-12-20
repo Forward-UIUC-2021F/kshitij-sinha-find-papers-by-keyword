@@ -1,36 +1,16 @@
 import math
 import numpy as np
-import pandas as pd
-import mysql.connector
 import numpy.linalg as la
 from sklearn.cluster import DBSCAN
 
 from find_papers_by_keyword.trie.utils import construct_trie, construct_re, get_matches
-from find_papers_by_keyword.utils import read_pickle_file, read_json_file, get_top_k, concat_paper_info, standardize_non_ascii
+from find_papers_by_keyword.utils import get_top_k, concat_paper_info, standardize_non_ascii
 
 class PaperKeywordAssigner():
-    def __init__(self, db):
-        self.db = db
-
-    def assign_paper_keywords(
-            self, golden_keywords_file, paper_embeddings_file,
-            paper_id_to_embeddings_file, keyword_embeddings_file, word_to_other_freq_file):
-        ### Reading data from files ###
-        print("Loading and preprocessing data")
-        with self.db.cursor(dictionary=True) as dictcursor:
-            paper_metadata = self._get_paper_data(dictcursor)
-            keyword_metadata = self._get_keyword_data(dictcursor)
-
-        keyword_to_id = {k["keyword"]: k["id"] for k in keyword_metadata}
-
-        paper_embeddings = read_pickle_file(paper_embeddings_file)
-        paper_id_to_emb_ind = read_json_file(paper_id_to_embeddings_file)
-
-        keyword_embeddings = read_pickle_file(keyword_embeddings_file)
+    def assign_paper_keywords(self, paper_data, keyword_data, golden_keywords, paper_embeddings,
+            keyword_embeddings, paper_id_to_emb_ind, word_to_other_freq):        
+        keyword_to_id = {k["keyword"]: k["id"] for k in keyword_data}
         keyword_embeddings = self._normalize_embs(keyword_embeddings)
-
-        # Frequency counts of keywords for non-cs papers from arxiv
-        word_to_other_freq = read_pickle_file(word_to_other_freq_file)
         word_id_to_other_freq = self._get_word_id_to_other_freq(
             word_to_other_freq, keyword_to_id)
 
@@ -40,18 +20,16 @@ class PaperKeywordAssigner():
         with freq >= 5
         - EmbedRank set: Use EmbedRank to extract keywords from entire cs corpus.
         """
-        golden_keywords_full = pd.read_csv(golden_keywords_file)
-        golden_keywords = set(golden_keywords_full['word'])
-
-        keywords_trie = construct_trie(golden_keywords)
+        keyword_search_set = set(golden_keywords)
+        keywords_trie = construct_trie(keyword_search_set)
         keywords_re = construct_re(keywords_trie)
 
         # For every paper, finds top keyword matches. Stores matches in database
         # Every row in database has paper, keyword, and match score
         # For every paper, removes duplicate keywords using clustering
-        insert_data = []
+        assignments = []
         print("Starting paper keyword extraction: ")
-        for p_i, paper in enumerate(paper_metadata):
+        for p_i, paper in enumerate(paper_data):
             paper_id = paper['id']
             raw_text = concat_paper_info(paper['title'], paper['abstract'])
 
@@ -86,18 +64,13 @@ class PaperKeywordAssigner():
 
             # self._add_paper_assignments_to_database(cursor, paper_id, unique_top_keywords)
             for keyword_id, keyword_score in unique_top_keywords:
-                insert_data.append((paper_id, str(keyword_id), str(keyword_score)))
+                assignments.append((paper_id, str(keyword_id), str(keyword_score)))
 
             if p_i % 1000 == 0:
                 print("On " + str(p_i) + "th paper")
 
-        cursor = self.db.cursor()
-        insert_sql = "REPLACE INTO Publication_FoS (publication_id, FoS_id, score) VALUES (%s, %s, %s)"
-        cursor.executemany(insert_sql, insert_data)
-        cursor.close()
-
         print(f"{p_i} papers analyzed")
-        self.db.commit()
+        return assignments
 
     def _get_unique_keywords(self, keywords, embeddings, max_keywords):
         """
@@ -175,11 +148,16 @@ class PaperKeywordAssigner():
         keyword_matches = get_matches(raw_text, keywords_re, True)
         match_ids = []
         for keyword, match_freq in keyword_matches:
-            if keyword in keyword_to_id:
+            try:
                 match_ids.append(keyword_to_id[keyword])
-
-            # if match is not in keyword_to_id, then match doesn't exist in our original keyword dataset
-            # so we skip the corresponding matched keyword
+            except KeyError:
+                # If match is not in keyword_to_id, then match doesn't exist in our original keyword dataset
+                # so we skip the corresponding matched keyword
+                continue
+            except Exception as e:
+                print("Exception", type(e), e)
+                match_ids.append(keyword_to_id[standardize_non_ascii(keyword)])
+                
 
         return match_ids
 
@@ -197,20 +175,6 @@ class PaperKeywordAssigner():
 
         return word_id_to_other_freq
 
-    def _get_paper_data(self, dictcursor):
-        dictcursor.execute("""
-            SELECT id, title, abstract
-            FROM Publication
-        """)
-        return dictcursor.fetchall()
-
-    def _get_keyword_data(self, dictcursor):
-        dictcursor.execute("""
-            SELECT id, keyword
-            FROM FoS
-        """)
-        return dictcursor.fetchall()
-
     def _normalize_embs(self, emb_arr):
         emb_norms = la.norm(emb_arr, axis=1)
         return emb_arr / emb_norms[:, None]
@@ -218,30 +182,3 @@ class PaperKeywordAssigner():
     def _normalize_vec(self, vec):
         return vec / la.norm(vec)
 
-
-def main():
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="forward",
-        password="forward",
-        database="assign_1"
-    )
-
-    data_root_dir = 'data/'
-
-    golden_keywords_file = data_root_dir + "golden_words.csv"
-
-    paper_embeddings_file = data_root_dir + "paper_embs.pickle"
-    paper_id_to_embeddings_file = data_root_dir + "paper_id_to_ind.json"
-    keyword_embeddings_file = data_root_dir + "keyword_embs.pickle"
-
-    word_to_other_freq_file = data_root_dir + "other_freqs.pickle"
-
-    assigner = PaperKeywordAssigner(mydb)
-    assigner.assign_paper_keywords(golden_keywords_file, paper_embeddings_file,
-                                   paper_id_to_embeddings_file, keyword_embeddings_file,
-                                   word_to_other_freq_file)
-
-
-if __name__ == "__main__":
-    main()
