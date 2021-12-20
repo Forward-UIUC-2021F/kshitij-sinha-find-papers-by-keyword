@@ -1,4 +1,4 @@
-from src.utils import gen_sql_in_tup, drop_table
+from .utils import gen_sql_in_tup, drop_table
 import mysql.connector
 
 class PaperSearchEngine:
