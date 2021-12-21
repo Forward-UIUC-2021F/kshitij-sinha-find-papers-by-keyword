@@ -157,17 +157,3 @@ class PaperSearchEngine:
 
         cur.execute(append_given_sql, append_given_query_params)
         self.db.commit()
-
-if __name__ == '__main__':
-
-    # Setting up db
-    db = mysql.connector.connect(
-      host="localhost",
-      user="forward",
-      password="forward",
-      database="assign_paper_kwds"
-    )
-
-    searchEngine = PaperSearchEngine(db)
-
-    print(searchEngine.get_relevant_papers_by_id((0,), 5))

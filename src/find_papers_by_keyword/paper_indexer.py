@@ -5,15 +5,6 @@ from .utils import write_pickle_data, write_json_data
 
 import mysql.connector
 
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()
-
-
 class PaperIndexer():
     """Computes paper data used in rank-papers
 
