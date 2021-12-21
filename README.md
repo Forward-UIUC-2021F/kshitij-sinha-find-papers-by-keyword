@@ -69,6 +69,26 @@ To work with the module, the paper data must be a `json` file in the following f
 
 For an example of how this works, see the command-line utility `store_papers.py`
 
+## Testing
+This module contains a test suite to verify the functionality of the components. The tests are located in the `test` directory.
+
+* To run all tests, use the following command from the root directory, `kshitij-sinha-find-papers-by-keyword`
+    ```
+    python -m unittest discover
+    ```
+
+* To run all tests in a specific Python module, use the command
+    ```
+    python -m unittests [path to test module]
+    ```
+    Where `path to test module` is a dot-delimited path from the root directory to the test module.
+    For example, to run the tests in `test/find_papers_by_keyword/test_assign_paper_keywords.py`, run
+    ```
+    python -m test.find_papers_by_keyword.test_assign_paper_keywords
+    ```
+    
+ _Note that the tests in `test_rank_papers.py` only work with data from the `dump.sql` file_
+
 ## Project Structure
 ```
 kshitij-sinha-find-papers-by-keyword/
