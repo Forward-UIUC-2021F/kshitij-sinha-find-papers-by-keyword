@@ -2,6 +2,40 @@
 
 This module is responsible for finding research papers that are most relevant to a set of query keywords. The list of papers should be ranked by their relavance to the keywords.
 
+## Setup
+
+## Project Structure
+```
+kshitij-sinha-find-papers-by-keyword/
+  - database_setup/create_tables.sql
+  - scripts/
+  - src/
+    - find_papers.py
+    - store_papers.py
+    - find_paper_by_keyword/
+      - assign_paper_keywords.py
+      - database.py
+      - embeddings_generator.py
+      - paper_indexer.py
+      - rank_papers.py
+      - utils.py
+    - fild_readers/
+      - keyword_file_reader.py
+      - paper_file_reader.py
+  - test/
+  - test_data/
+```
+* `database_setup/create_tables.sql`: Contains definitions of SQL tables required for the module to operate
+* `scripts/`: Contains small scripts used generate test data and to process data files to conform to the schema required by the module.
+* `src/`: Contains all module source code, including command-line utilities for demonstration purposes
+  * `src/find_papers.py`: CLI utility to demonstrate how keywords are used to search for papers
+  * `src/store_papres.py`: CLI utility to demonstrate how embeddings are generated and how keywords are assigned to papers
+  * `src/find_paper_by_keyword/`: The primary package of this module. This package is designed to work by itself and contains all the functions outlines in the **Functional Design**
+  * `src/file_readers/`: Contains Python Classes to read paper and keyword. These Classes are only used by the scripts in `src/`
+* `test/`: Contains test code. Reflects the structure of `src/`
+* `test_data/`: Contains data used in test suite
+
+
 ## Functional Design
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
