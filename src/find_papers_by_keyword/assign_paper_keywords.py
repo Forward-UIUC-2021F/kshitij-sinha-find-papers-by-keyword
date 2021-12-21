@@ -3,8 +3,8 @@ import numpy as np
 import numpy.linalg as la
 from sklearn.cluster import DBSCAN
 
-from find_papers_by_keyword.trie.utils import construct_trie, construct_re, get_matches
-from find_papers_by_keyword.utils import get_top_k, concat_paper_info, standardize_non_ascii
+from .trie.utils import construct_trie, construct_re, get_matches
+from .utils import get_top_k, concat_paper_info, standardize_non_ascii
 
 class PaperKeywordAssigner():
     """ Computes similarity scores between papers and keywords and assigns relevant keywords to papers
@@ -87,6 +87,7 @@ class PaperKeywordAssigner():
 
             match_ids = self._get_keyword_match_ids(
                 raw_text, keywords_re, keyword_to_id)
+
             
             if len(match_ids) == 0:
                 # No matches to assign
@@ -102,7 +103,7 @@ class PaperKeywordAssigner():
             # Select top-k-scoring keywords
             query_keywords = 17
             top_keywords = get_top_k(keyword_scores, min(
-                query_keywords, len(keyword_scores) - 1), lambda t: t[1])
+                query_keywords, len(keyword_scores)), lambda t: t[1])
 
             selected_keyword_ids = [t[0] for t in top_keywords]
             selected_keyword_embs = keyword_embeddings[selected_keyword_ids]
@@ -112,7 +113,7 @@ class PaperKeywordAssigner():
 
             # self._add_paper_assignments_to_database(cursor, paper_id, unique_top_keywords)
             for keyword_id, keyword_score in unique_top_keywords:
-                assignments.append((paper_id, str(keyword_id), str(keyword_score)))
+                assignments.append((paper_id, keyword_id, float(keyword_score)))
 
             if p_i % 1000 == 0:
                 print("On " + str(p_i) + "th paper")
