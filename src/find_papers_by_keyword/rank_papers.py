@@ -77,7 +77,7 @@ class PaperSearchEngine:
         # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
         drop_table(cur, "Publication_Rank_Scores")
         get_ranked_publications_sql = """
-            SELECT Publication_id, title, abstract, SUM(max_score) as total_score
+            SELECT Publication_id, title, abstract, SUM(max_score) * (citations + 1) as total_score
             FROM
                 (
                 SELECT parent_id, Publication_id, MAX(npmi * score) as max_score
