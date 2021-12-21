@@ -1,10 +1,28 @@
-import mysql.connector 
+import mysql.connector
 
 class Database():
-    def __init__(self, db):
+    """ Provides methods to write and read from a MySQL database containing Paper and Keyword data
+
+    This class assumes that the database has been properly created according to database_setup/create_tables.sql
+
+    Attributes:
+        db: MySQLConnection to a database contaning data for this module
+    """
+    def __init__(self, db: mysql.connector.MySQLConnection):
         self.db = db
 
     def get_keyword_data(self) -> dict:
+        """Get keyword data from FoS table
+
+        Returns: 
+            A list of dictionaries in the format
+            [
+                {
+                    "id": int,
+                    "keyword": str
+                }, ...
+            ]
+        """
         with self.db.cursor(dictionary=True) as dictcursor:
             dictcursor.execute("""
                 SELECT id, keyword
@@ -13,9 +31,22 @@ class Database():
             return dictcursor.fetchall()
 
     def get_paper_data(self) -> dict:
+        """Get paper data from FoS table
+
+        Returns: 
+            A list of dictionaries in the format
+            [
+                {
+                    "id": str,
+                    "title": str,
+                    "abstract": str
+                    "citations": int
+                }, ...
+            ]
+        """
         with self.db.cursor(dictionary=True) as dictcursor:
             dictcursor.execute("""
-                SELECT id, title, abstract
+                SELECT id, title, abstract, citations
                 FROM Publication Publication
             """)
             return dictcursor.fetchall()
