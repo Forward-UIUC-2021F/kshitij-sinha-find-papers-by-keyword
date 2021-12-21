@@ -2,10 +2,129 @@
 
 This module is responsible for finding research papers that are most relevant to a set of query keywords. The list of papers should be ranked by their relavance to the keywords.
 
+## Setup
+1) Install necessary module dependencies
+```
+pip install -r requirements
+```
+2) Download `drive_data.zip` from [Forward Shared Data Drive](https://drive.google.com/drive/u/1/folders/1vq72EBXH38lb7qJbJsBIkHZiOW35NByI). Uncompress the zip file into a folder named `data/`
+3) This module uses MySQL to query paper data. Install MySQL using the [MySQL Installation Guide](https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/)
+4) Create an empty MySQL database
+5) Populate the database using the `dump.sql` file in the `data/` folder
+```
+mysql -u [user] -p [database_name] < data/dump.sql
+```
+
+To find papers by keyword, use this module either as command-line utility or a library
+### Using as a command-line utility
+We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
+```
+python src/find_papers.py [list of keywords]
+```
+Where [list of keywords] is a space-delimited list of keywords in the search query.
+For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
+```
+python src/find_papers.py "machine learning" "genetic algorithms"
+```
+
+### Using as a library
+The `src/find_papers_by_keyword` package contains all the Classes and Methods used to search for papers. Specifically, we use the PaperSearchEngine class in `src/find_papers_by_keyword/paper_search_engine.py`
+
+1) Create a database connection using mysql.connector
+```
+db = mysql.connector.connect(host, user, password, database)
+```
+2) Create an instance of PaperSearchEngine using the new database connection
+```
+search_engine = PaperSearchEngine(db)
+```
+3) Search for papers using the `get_relevant_papers` method. See **Functional Design** for more information
+```
+results = search_engine.get_relevant_papers(("machine learning", "genetic algorithmns"), 15)
+```
+`results` will be a list of tuples of relevant paper data and the corresponding match score.
+
+## Changing Paper Search Space
+The `dump.sql` comes with all the intermediate data necessary to search by keywords through the Arxiv dataset. To be able to search through a set of different papers, we need to store the new paper data and do intermediate processing.
+
+1) **Optionally** delete all rows in the `Publication` and `Publication_FoS` table in the MySQL database. Only do this if you want to search exclusively through the new set of of paper data.
+3) Download a paper dataset. See `mag_papers` zip files in [OAG Dataset](https://www.microsoft.com/en-us/research/project/open-academic-graph/) for an example.
+To work with the module, the paper data must be a `json` file in the following format. Do any preprocessing necessary to convert the data to this format.
+```
+[
+    {
+        "id": str,
+        "title": str,
+        "abstract": str,
+        "citations": int,
+        ...
+    },
+    ...
+]
+```
+2) Create a `MySQL.connector.MySQLConnection`
+3) In a Python program, create an instance of `PaperIndexer`, found in `src/find_papers_by_keyword/paper_indexer.py`.
+5) We will run the `index_papers` method in `PaperIndex`. Load the processed paper data, golden keywords data (`data/golden_keywords.csv`), keword embeddings data (`data/keyword_embs.pickle`), keyword frequency on non-CS paper data (`data/other_freqs.pickle`) into a Python program, according to the schemas outlined in the method docstring.
+6) Call the `index_papers` method using the loaded data. The method will save the new paper data into  _Note: the method optionally takes two additional arguments to store the computed paper embeddings in pickle files_
+
+For an example of how this works, see the command-line utility `store_papers.py`
+
+## Testing
+This module contains a test suite to verify the functionality of the components. The tests are located in the `test` directory.
+
+* To run all tests, use the following command from the root directory, `kshitij-sinha-find-papers-by-keyword`
+    ```
+    python -m unittest discover
+    ```
+
+* To run all tests in a specific Python module, use the command
+    ```
+    python -m unittests [path to test module]
+    ```
+    Where `path to test module` is a dot-delimited path from the root directory to the test module.
+    For example, to run the tests in `test/find_papers_by_keyword/test_assign_paper_keywords.py`, run
+    ```
+    python -m test.find_papers_by_keyword.test_assign_paper_keywords
+    ```
+    
+ _Note that the tests in `test_rank_papers.py` only work with data from the `dump.sql` file_
+
+## Project Structure
+```
+kshitij-sinha-find-papers-by-keyword/
+  - database_setup/create_tables.sql
+  - scripts/
+  - src/
+    - find_papers.py
+    - store_papers.py
+    - find_paper_by_keyword/
+      - assign_paper_keywords.py
+      - database.py
+      - embeddings_generator.py
+      - paper_indexer.py
+      - rank_papers.py
+      - utils.py
+    - fild_readers/
+      - keyword_file_reader.py
+      - paper_file_reader.py
+  - test/
+  - test_data/
+```
+* `database_setup/create_tables.sql`: Contains definitions of SQL tables required for the module to operate
+* `scripts/`: Contains small scripts used generate test data and to process data files to conform to the schema required by the module.
+* `src/`: Contains all module source code, including command-line utilities for demonstration purposes
+  * `src/find_papers.py`: CLI utility to demonstrate how keywords are used to search for papers
+  * `src/store_papres.py`: CLI utility to demonstrate how embeddings are generated and how keywords are assigned to papers
+  * `src/find_paper_by_keyword/`: The primary package of this module. This package is designed to work by itself and contains all the functions outlines in the **Functional Design**
+  * `src/file_readers/`: Contains Python Classes to read paper and keyword. These Classes are only used by the scripts in `src/`
+* `test/`: Contains test code. Reflects the structure of `src/`
+* `test_data/`: Contains data used in test suite
+
+
 ## Functional Design
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
-get_relevant_papers(keywords):
+get_relevant_papers(keywords, search_limit):
   ...
   return [(paper_1_id, match_1_score), (paper_2_id, match_2_score), ..., (paper_n_id, match_n_score)]
 ```
@@ -39,7 +158,6 @@ Every paper is then assigned a set of keywords that best describe the keywords c
 2) Iterate through every paper, `paper_i`, defining  `pt_i` to be the concatenation of the paper title and abstract. 
   
     1) Using `keywords_re`, find all keywords that occur in `pt_i`, and iterate through every matching keyword, 'match_kwd` 
-    
         1) Compute the Cosine Similarity between the embeddings corresponding to `pt_i` and the `match_kwd` and store the result as `match_score`.
         2) Our search service will primarily receive keywords relating to the field of computer science. Therefore, we want to prioritize CS-focused keywords in our assignment algorithm. To do this, we penalize keywords that appear frequently in non-CS papers. We do this by dividing `match_score` by its squre root: 
         
