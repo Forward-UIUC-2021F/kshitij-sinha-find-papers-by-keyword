@@ -17,15 +17,16 @@ mysql -u [user] -p [database_name] < data/dump.sql
 
 To find papers by keyword, use this module either as command-line utility or a library
 ### Using as a command-line utility
-We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
-```
-python src/find_papers.py [list of keywords]
-```
-Where [list of keywords] is a space-delimited list of keywords in the search query.
-For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
-```
-python src/find_papers.py "machine learning" "genetic algorithms"
-```
+1) Replace contants in`src/sql_creds.py` with your database credentials.
+2) We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
+    ```
+    python src/find_papers.py [list of keywords]
+    ```
+    Where `[list of keywords]` is a space-delimited list of keywords in the search query.
+    For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
+    ```
+    python src/find_papers.py "machine learning" "genetic algorithms"
+    ```
 
 ### Using as a library
 The `src/find_papers_by_keyword` package contains all the Classes and Methods used to search for papers. Specifically, we use the PaperSearchEngine class in `src/find_papers_by_keyword/paper_search_engine.py`
