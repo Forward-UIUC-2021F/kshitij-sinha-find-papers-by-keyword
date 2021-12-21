@@ -4,6 +4,7 @@ from file_readers.paper_file_reader import PaperFileReader
 from file_readers.keyword_file_reader import KeywordFileReader
 from find_papers_by_keyword.utils import read_pickle_file, read_json_file
 import mysql.connector
+import sql_creds
 
 import argparse
 
@@ -67,14 +68,14 @@ def main():
     word_to_other_freq = read_pickle_file(args.word_to_other_freq_file)
 
     print("Connecting to database...")
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="forward",
-        password="forward",
-        database="assign_1"
+    db_connection = mysql.connector.connect(
+        host=sql_creds.db_host,
+        user=sql_creds.db_user,
+        password=sql_creds.db_password,
+        database=sql_creds.db_name
     )
 
-    indexer = PaperIndexer(mydb)
+    indexer = PaperIndexer(db_connection)
 
     print("Indexing papers...")
     if load_embeddings:
@@ -87,6 +88,8 @@ def main():
                              args.paper_embeddings_file_out, args.paper_id_to_embs_file_out)
 
     print("Paper indexing complete")
+
+    db_connection.close()
 
 if __name__ == "__main__":
     main()

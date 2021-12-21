@@ -2,6 +2,7 @@ from find_papers_by_keyword.rank_papers import PaperSearchEngine
 from find_papers_by_keyword.database import Database
 import mysql.connector
 import argparse
+import sql_creds
 
 
 def build_result_string(rank, title, abstract, match_score):
@@ -18,10 +19,10 @@ def main():
     args = parser.parse_args()
 
     db_connection = mysql.connector.connect(
-        host="localhost",
-        user="forward",
-        password="forward",
-        database="assign_paper_kwds"
+        host=sql_creds.db_host,
+        user=sql_creds.db_user,
+        password=sql_creds.db_password,
+        database=sql_creds.db_name
     )
 
     engine = PaperSearchEngine(db_connection)
@@ -39,6 +40,8 @@ def main():
             f'Abstract: {abstract}\n'
         )
         rank += 1
+
+    db_connection.close()
 
 
 if __name__ == "__main__":
