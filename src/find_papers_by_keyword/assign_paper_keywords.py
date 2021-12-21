@@ -76,7 +76,7 @@ class PaperKeywordAssigner():
         # Every row in database has paper, keyword, and match score
         # For every paper, removes duplicate keywords using clustering
         assignments = []
-        print("Starting paper keyword extraction: ")
+        print("Starting paper keyword assignment: ")
         for p_i, paper in enumerate(paper_data):
             paper_id = paper['id']
             raw_text = concat_paper_info(paper['title'], paper['abstract'])

@@ -5,6 +5,7 @@ from .utils import write_pickle_data, write_json_data
 
 import mysql.connector
 
+
 def main():
     pass
 
@@ -22,14 +23,15 @@ class PaperIndexer():
     filled with keyword data. This table will be used to assign papers to keywords.
 
     PaperIndexer writes to the Publication and Publication_FoS table
-    
+
     Attributes:
-        db: MySQLConnection to a database. 
+        mysqlconnction: MySQLConnection to a database. 
             The tables Publication, FoS, and Publication_FoS should already be created. 
             See database_setup/create_tables.sql for more details
     """
-    def __init__(self, db: mysql.connector.MySQLConnection):
-        self.db = db
+
+    def __init__(self, mysqlconnection: mysql.connector.MySQLConnection):
+        self.database = Database(mysqlconnection)
 
     def index_papers(self, paper_data, golden_keywords, keyword_embeddings,
                      word_to_other_freq, embeddings_outfile, id_to_emb_ind_outfile) -> None:
@@ -65,9 +67,8 @@ class PaperIndexer():
             id_to_emb_ind_outfile: The fil epath that will be used to store a pickle file containing a dictionary mapping
                 paper ids to their corresponding row in the embedding
         """
-        paper_data = paper_data[:10]
-        database = Database(self.db)
-        database.store_paper_data(paper_data)
+        paper_data = paper_data
+        self.database.store_paper_data(paper_data)
 
         embeddings_generator = EmbeddingsGenerator()
         paper_embeddings, paper_id_to_emb_ind = embeddings_generator.generate_paper_embeddings(
@@ -76,10 +77,38 @@ class PaperIndexer():
         write_pickle_data(paper_embeddings, embeddings_outfile)
         write_json_data(paper_id_to_emb_ind, id_to_emb_ind_outfile)
 
-        keyword_data = database.get_keyword_data()
+        keyword_data = self.database.get_keyword_data()
 
+        self.assign_paper_keywords_and_store(paper_data, keyword_data, golden_keywords, paper_embeddings,
+                                            keyword_embeddings, paper_id_to_emb_ind, word_to_other_freq)
+
+
+    def index_papers_with_embs(self, paper_data, golden_keywords, paper_embeddings, keyword_embeddings,
+                     paper_id_to_emb_ind, word_to_other_freq) -> None:
+        """
+        This method does the same thing as index_papers, however, this method does not generate embeddings.
+        Instead, it accepts pre-generated embeddings as an argument. This, this method uses a 2-step process
+
+        1)  The paper data is stored in a database
+        2)  Keywords are assigned to papers. See assign_paper_keywords.py for more information
+
+        Args:
+            Takes the same arguments as PaperKeywordAssigner.assign_paper_kwds()
+
+        Returns:
+            None. Instead, this method saves paper-keyword assignments to a database
+        """
+        paper_data = paper_data
+        self.database.store_paper_data(paper_data)
+
+        keyword_data = self.database.get_keyword_data()
+        self.assign_paper_keywords_and_store(paper_data, keyword_data, golden_keywords, paper_embeddings,
+                                            keyword_embeddings, paper_id_to_emb_ind, word_to_other_freq)
+
+    def assign_paper_keywords_and_store(self, paper_data, keyword_data, golden_keywords, paper_embeddings,
+                                            keyword_embeddings, paper_id_to_emb_ind, word_to_other_freq):
         assigner = PaperKeywordAssigner()
         assignments = assigner.assign_paper_keywords(paper_data, keyword_data, golden_keywords,
                                                      paper_embeddings, keyword_embeddings, paper_id_to_emb_ind, word_to_other_freq)
 
-        database.store_publication_fos(assignments)
+        self.database.store_publication_fos(assignments)
