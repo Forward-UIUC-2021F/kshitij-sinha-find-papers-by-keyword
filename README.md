@@ -122,6 +122,7 @@ kshitij-sinha-find-papers-by-keyword/
 
 
 ## Functional Design
+### PaperSearchEngine
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
 get_relevant_papers(keywords, search_limit):
@@ -133,6 +134,13 @@ get_relevant_papers(keywords, search_limit):
 compute_match_score(paper_id, keyword):
   ...
   return match_score
+```
+### PaperIndexer
+* Stores paper data to the database. Computes embeddings using the paper contents and compares with keyword embeddings to find the top keywords (from `golden_keywords`) that match every paper. Stores these paper-keyword assignments and the corresponding similarity scores to the database. Penalizes any keyword that appears frequently in non-CS papers.
+```python
+get_relevant_papers(paper_data, golden_keywords, keyword_embeddings, word_to_other_freq):
+  ...
+  return None
 ```
 
 ## Algorithmic Design
