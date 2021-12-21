@@ -3,6 +3,50 @@
 This module is responsible for finding research papers that are most relevant to a set of query keywords. The list of papers should be ranked by their relavance to the keywords.
 
 ## Setup
+1) Install necessary module dependencies
+```
+pip install -r requirements
+```
+2) Download `drive_data.zip` from [Forward Shared Data Drive](https://drive.google.com/drive/u/1/folders/1vq72EBXH38lb7qJbJsBIkHZiOW35NByI). Uncompress the zip file into a folder named `data/`
+3) This module uses MySQL to query paper data. Install MySQL using the [MySQL Installation Guide](https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/)
+4) Create an empty MySQL database
+5) Populate the database using the `dump.sql` file in the `data/` folder
+```
+mysql -u [user] -p [database_name] < data/dump.sql
+```
+
+To find papers by keyword, use this module either as command-line utility or a library
+### Using as a command-line utility
+We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
+```
+python src/find_papers.py [list of keywords]
+```
+Where [list of keywords] is a space-delimited list of keywords in the search query.
+For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
+```
+python src/find_papers.py "machine learning" "genetic algorithms"
+```
+
+### Using as a library
+The `src/find_papers_by_keyword` package contains all the Classes and Methods used to search for papers. Specifically, we use the PaperSearchEngine class in `src/find_papers_by_keyword/paper_search_engine.py`
+
+1) Create a database connection using mysql.connector
+```
+db = mysql.connector.connect(host, user, password, database)
+```
+2) Create an instance of PaperSearchEngine using the new database connection
+```
+search_engine = PaperSearchEngine(db)
+```
+3) Search for papers using the `get_relevant_papers` method. See **Functional Design** for more information
+```
+results = search_engine.get_relevant_papers(("machine learning", "genetic algorithmns"), 15)
+```
+`results` will be a list of tuples of relevant paper data and the corresponding match score.
+
+## Changing Paper in Search Space
+The `dump.sql` comes with all the intermediate data necessary to search by keywords through the Arxiv dataset. To be able to search through a set of different papers, we need to store the new paper data and do intermediate processing
+
 
 ## Project Structure
 ```
@@ -39,7 +83,7 @@ kshitij-sinha-find-papers-by-keyword/
 ## Functional Design
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
-get_relevant_papers(keywords):
+get_relevant_papers(keywords, search_limit):
   ...
   return [(paper_1_id, match_1_score), (paper_2_id, match_2_score), ..., (paper_n_id, match_n_score)]
 ```
