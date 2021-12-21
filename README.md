@@ -17,15 +17,16 @@ mysql -u [user] -p [database_name] < data/dump.sql
 
 To find papers by keyword, use this module either as command-line utility or a library
 ### Using as a command-line utility
-We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
-```
-python src/find_papers.py [list of keywords]
-```
-Where [list of keywords] is a space-delimited list of keywords in the search query.
-For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
-```
-python src/find_papers.py "machine learning" "genetic algorithms"
-```
+1) Replace contants in`src/sql_creds.py` with your database credentials.
+2) We will use `src/find_papers.py` to find papers by keyword. Run the script using the following command
+    ```
+    python src/find_papers.py [list of keywords]
+    ```
+    Where `[list of keywords]` is a space-delimited list of keywords in the search query.
+    For example, we can find all papers related to "machine learning" and "genetic algorithms" using the following command
+    ```
+    python src/find_papers.py "machine learning" "genetic algorithms"
+    ```
 
 ### Using as a library
 The `src/find_papers_by_keyword` package contains all the Classes and Methods used to search for papers. Specifically, we use the PaperSearchEngine class in `src/find_papers_by_keyword/paper_search_engine.py`
@@ -122,6 +123,7 @@ kshitij-sinha-find-papers-by-keyword/
 
 
 ## Functional Design
+### PaperSearchEngine
 * Finds the top `n` papers that match a set of query keywords and returns them as a list, sorted in descending order by match scores.
 ```python
 get_relevant_papers(keywords, search_limit):
@@ -133,6 +135,13 @@ get_relevant_papers(keywords, search_limit):
 compute_match_score(paper_id, keyword):
   ...
   return match_score
+```
+### PaperIndexer
+* Stores paper data to the database. Computes embeddings using the paper contents and compares with keyword embeddings to find the top keywords (from `golden_keywords`) that match every paper. Stores these paper-keyword assignments and the corresponding similarity scores to the database. Penalizes any keyword that appears frequently in non-CS papers.
+```python
+get_relevant_papers(paper_data, golden_keywords, keyword_embeddings, word_to_other_freq):
+  ...
+  return None
 ```
 
 ## Algorithmic Design
