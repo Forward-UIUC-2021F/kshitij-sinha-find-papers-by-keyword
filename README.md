@@ -139,7 +139,7 @@ compute_match_score(paper_id, keyword):
 ### PaperIndexer
 * Stores paper data to the database. Computes embeddings using the paper contents and compares with keyword embeddings to find the top keywords (from `golden_keywords`) that match every paper. Stores these paper-keyword assignments and the corresponding similarity scores to the database. Penalizes any keyword that appears frequently in non-CS papers.
 ```python
-get_relevant_papers(paper_data, golden_keywords, keyword_embeddings, word_to_other_freq):
+index_papers(paper_data, golden_keywords, keyword_embeddings, word_to_other_freq):
   ...
   return None
 ```
