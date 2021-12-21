@@ -175,4 +175,4 @@ The goal of this step is receive a set of query keywords and output a list of re
 4) We finally compute the rank score for paper `p_k` like so.
 
 
-![Generate Embeddings](/figures/rank_scores.png)
+![Generate Embeddings](/figures/rank_score.png)
