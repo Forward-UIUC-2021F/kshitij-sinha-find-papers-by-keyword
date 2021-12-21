@@ -44,9 +44,30 @@ results = search_engine.get_relevant_papers(("machine learning", "genetic algori
 ```
 `results` will be a list of tuples of relevant paper data and the corresponding match score.
 
-## Changing Paper in Search Space
-The `dump.sql` comes with all the intermediate data necessary to search by keywords through the Arxiv dataset. To be able to search through a set of different papers, we need to store the new paper data and do intermediate processing
+## Changing Paper Search Space
+The `dump.sql` comes with all the intermediate data necessary to search by keywords through the Arxiv dataset. To be able to search through a set of different papers, we need to store the new paper data and do intermediate processing.
 
+1) **Optionally** delete all rows in the `Publication` and `Publication_FoS` table in the MySQL database. Only do this if you want to search exclusively through the new set of of paper data.
+3) Download a paper dataset. See `mag_papers` zip files in [OAG Dataset](https://www.microsoft.com/en-us/research/project/open-academic-graph/) for an example.
+To work with the module, the paper data must be a `json` file in the following format. Do any preprocessing necessary to convert the data to this format.
+```
+[
+    {
+        "id": str,
+        "title": str,
+        "abstract": str,
+        "citations": int,
+        ...
+    },
+    ...
+]
+```
+2) Create a `MySQL.connector.MySQLConnection`
+3) In a Python program, create an instance of `PaperIndexer`, found in `src/find_papers_by_keyword/paper_indexer.py`.
+5) We will run the `index_papers` method in `PaperIndex`. Load the processed paper data, golden keywords data (`data/golden_keywords.csv`), keword embeddings data (`data/keyword_embs.pickle`), keyword frequency on non-CS paper data (`data/other_freqs.pickle`) into a Python program, according to the schemas outlined in the method docstring.
+6) Call the `index_papers` method using the loaded data. The method will save the new paper data into  _Note: the method optionally takes two additional arguments to store the computed paper embeddings in pickle files_
+
+For an example of how this works, see the command-line utility `store_papers.py`
 
 ## Project Structure
 ```
@@ -117,7 +138,6 @@ Every paper is then assigned a set of keywords that best describe the keywords c
 2) Iterate through every paper, `paper_i`, defining  `pt_i` to be the concatenation of the paper title and abstract. 
   
     1) Using `keywords_re`, find all keywords that occur in `pt_i`, and iterate through every matching keyword, 'match_kwd` 
-    
         1) Compute the Cosine Similarity between the embeddings corresponding to `pt_i` and the `match_kwd` and store the result as `match_score`.
         2) Our search service will primarily receive keywords relating to the field of computer science. Therefore, we want to prioritize CS-focused keywords in our assignment algorithm. To do this, we penalize keywords that appear frequently in non-CS papers. We do this by dividing `match_score` by its squre root: 
         
