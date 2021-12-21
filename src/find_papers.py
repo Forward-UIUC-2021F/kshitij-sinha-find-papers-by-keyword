@@ -23,19 +23,14 @@ def main():
         password="forward",
         database="assign_paper_kwds"
     )
-    database = Database(db_connection)
 
     engine = PaperSearchEngine(db_connection)
     search_results = engine.get_relevant_papers(
         args.keywords, 15)
 
-    ids = tuple(res[0] for res in search_results)
-    papers = database.get_paper_data_by_id(ids)
-    rank = 1
-    for paper, result in zip(papers, search_results):
-        title = paper['title']
-        abstract = paper['abstract']
-        id, match_score = result
+    for i, result in enumerate(search_results):
+        rank = i + 1
+        id, title, abstract, match_score = result
 
         print(
             f'Paper {rank}:\tID: {id}\n' + \

@@ -57,7 +57,7 @@ class PaperSearchEngine:
 
         Returns: A ranked list of tuples representing matched papers and their corresponding match score.
         The list uses the following schema:
-            [(paper_id_1, paper_score_1), (paper_id_2, paper_score_2), ...]
+            [(id_1, title_1, absract_1, paper_score_1), (id_2, title_2, abstract_2 ,paper_score_2), ...]
 
         Each publication has an associated score for each input keyword.
         The score between an input keyword and a paper is computed by determining if 
@@ -77,7 +77,7 @@ class PaperSearchEngine:
         # To fix this, we use an INNER JOIN when finding joining with Publication_FoS
         drop_table(cur, "Publication_Rank_Scores")
         get_ranked_publications_sql = """
-            SELECT Publication_id, SUM(max_score) as total_score
+            SELECT Publication_id, title, abstract, SUM(max_score) as total_score
             FROM
                 (
                 SELECT parent_id, Publication_id, MAX(npmi * score) as max_score
@@ -87,6 +87,7 @@ class PaperSearchEngine:
 
                 GROUP BY parent_id, Publication_id
                 ) as keyword_paper_score
+            LEFT JOIN Publication on Publication_id = Publication.id
             GROUP BY Publication_id
             ORDER BY total_score DESC
         """
