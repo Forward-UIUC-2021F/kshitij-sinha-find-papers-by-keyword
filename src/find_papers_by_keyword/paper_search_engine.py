@@ -39,11 +39,22 @@ class PaperSearchEngine:
         - search_limit: an integer specifying the number of top publication matches to return
 
         Returns:
-        - A list of tuples representing our search results. Every tuple following the format (paper_id, match_score)
+        - A list of tuples representing our search results. Every tuple following the format 
+            (paper_id, title, abstract, match_score)
         """
         with self.db.cursor() as cur:
             self._store_keywords(cur, keyword_ids)
             return self._get_ranked_publications(cur)[:search_limit]
+
+    def compute_match_score(self, paper_id, keyword_id):
+        sql = """
+            SELECT score
+            FROM Publication_FoS
+            WHERE Publication_id = (%s) AND FoS_id = (%s)
+        """
+        with self.db.cursor() as cur:
+            cur.execute(sql, (paper_id, keyword_id))
+            return cur.fetchone()[0]
 
     def _get_ranked_publications(self, cur):
         """

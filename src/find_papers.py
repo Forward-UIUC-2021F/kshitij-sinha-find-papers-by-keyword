@@ -1,4 +1,4 @@
-from find_papers_by_keyword.rank_papers import PaperSearchEngine
+from find_papers_by_keyword.paper_search_engine import PaperSearchEngine
 from find_papers_by_keyword.database import Database
 import mysql.connector
 import argparse

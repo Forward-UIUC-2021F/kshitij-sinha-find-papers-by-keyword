@@ -25,7 +25,7 @@ class PaperIndexer():
         self.database = Database(mysqlconnection)
 
     def index_papers(self, paper_data, golden_keywords, keyword_embeddings,
-                     word_to_other_freq, embeddings_outfile, id_to_emb_ind_outfile) -> None:
+                     word_to_other_freq, embeddings_outfile = None, id_to_emb_ind_outfile = FileNotFoundError) -> None:
         """
         Takes paper data and does the necessary preprocessing to prepare the paper data for ranking.
         This is done in a 3-step process. 
@@ -65,8 +65,10 @@ class PaperIndexer():
         paper_embeddings, paper_id_to_emb_ind = embeddings_generator.generate_paper_embeddings(
             paper_data)
 
-        write_pickle_data(paper_embeddings, embeddings_outfile)
-        write_json_data(paper_id_to_emb_ind, id_to_emb_ind_outfile)
+        if embeddings_outfile != None:
+            write_pickle_data(paper_embeddings, embeddings_outfile)
+        if id_to_emb_ind_outfile != None:
+            write_json_data(paper_id_to_emb_ind, id_to_emb_ind_outfile)
 
         keyword_data = self.database.get_keyword_data()
 

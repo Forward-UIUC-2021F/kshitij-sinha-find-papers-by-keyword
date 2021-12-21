@@ -59,7 +59,7 @@ def main():
 
     print("Loading and parsing files...")
     paper_reader = PaperFileReader("id", "title", "abstract", None)
-    paper_data = paper_reader.read_file(args.papers_file)[:10]
+    paper_data = paper_reader.read_file(args.papers_file)
 
     golden_keywords_full = pd.read_csv(args.golden_keywords_file)
     golden_keywords = set(golden_keywords_full['word'])
