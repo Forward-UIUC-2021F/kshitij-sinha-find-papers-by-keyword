@@ -138,6 +138,13 @@ dmypy.json
 cython_debug/
 
 # VSCode
-data
-old_data
 .DS_Store
+
+# Data folder
+data
+
+# Temp folders
+old_data
+small_data
+schemas
+sandbox

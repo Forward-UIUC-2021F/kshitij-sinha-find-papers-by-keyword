@@ -1,0 +1,345 @@
+[
+  {
+    "id": "0704.0002",
+    "submitter": "Louis Theran",
+    "authors": "Ileana Streinu and Louis Theran",
+    "title": "Sparsity-certifying Graph Decompositions",
+    "comments": "To appear in Graphs and Combinatorics",
+    "journal-ref": null,
+    "doi": null,
+    "report-no": null,
+    "categories": "math.CO cs.CG",
+    "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+    "abstract": "  We describe a new algorithm, the $(k,\\ell)$-pebble game with colors, and use\nit obtain a characterization of the family of $(k,\\ell)$-sparse graphs and\nalgorithmic solutions to a family of problems concerning tree decompositions of\ngraphs. Special instances of sparse graphs appear in rigidity theory and have\nreceived increased attention in recent years. In particular, our colored\npebbles generalize and strengthen the previous results of Lee and Streinu and\ngive a new proof of the Tutte-Nash-Williams characterization of arboricity. We\nalso present a new decomposition that certifies sparsity based on the\n$(k,\\ell)$-pebble game with colors. Our work also exposes connections between\npebble game algorithms and previous sparse graph algorithms by Gabow, Gabow and\nWestermann and Hendrickson.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sat, 31 Mar 2007 02:26:18 GMT"
+      },
+      {
+        "version": "v2",
+        "created": "Sat, 13 Dec 2008 17:26:00 GMT"
+      }
+    ],
+    "update_date": "2008-12-13",
+    "authors_parsed": [
+      [
+        "Streinu",
+        "Ileana",
+        ""
+      ],
+      [
+        "Theran",
+        "Louis",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0046",
+    "submitter": "Denes Petz",
+    "authors": "I. Csiszar, F. Hiai and D. Petz",
+    "title": "A limit relation for entropy and channel capacity per unit cost",
+    "comments": "LATEX file, 11 pages",
+    "journal-ref": "J. Math. Phys. 48(2007), 092102.",
+    "doi": "10.1063/1.2779138",
+    "report-no": null,
+    "categories": "quant-ph cs.IT math.IT",
+    "license": null,
+    "abstract": "  In a quantum mechanical model, Diosi, Feldmann and Kosloff arrived at a\nconjecture stating that the limit of the entropy of certain mixtures is the\nrelative entropy as system size goes to infinity. The conjecture is proven in\nthis paper for density matrices. The first proof is analytic and uses the\nquantum law of large numbers. The second one clarifies the relation to channel\ncapacity per unit cost for classical-quantum channels. Both proofs lead to\ngeneralization of the conjecture.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 16:37:36 GMT"
+      }
+    ],
+    "update_date": "2009-11-13",
+    "authors_parsed": [
+      [
+        "Csiszar",
+        "I.",
+        ""
+      ],
+      [
+        "Hiai",
+        "F.",
+        ""
+      ],
+      [
+        "Petz",
+        "D.",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0047",
+    "submitter": "Igor Grabec",
+    "authors": "T. Kosel and I. Grabec",
+    "title": "Intelligent location of simultaneously active acoustic emission sources:\n  Part I",
+    "comments": "5 pages, 5 eps figures, uses IEEEtran.cls",
+    "journal-ref": null,
+    "doi": null,
+    "report-no": null,
+    "categories": "cs.NE cs.AI",
+    "license": null,
+    "abstract": "  The intelligent acoustic emission locator is described in Part I, while Part\nII discusses blind source separation, time delay estimation and location of two\nsimultaneously active continuous acoustic emission sources.\n  The location of acoustic emission on complicated aircraft frame structures is\na difficult problem of non-destructive testing. This article describes an\nintelligent acoustic emission source locator. The intelligent locator comprises\na sensor antenna and a general regression neural network, which solves the\nlocation problem based on learning from examples. Locator performance was\ntested on different test specimens. Tests have shown that the accuracy of\nlocation depends on sound velocity and attenuation in the specimen, the\ndimensions of the tested area, and the properties of stored data. The location\naccuracy achieved by the intelligent locator is comparable to that obtained by\nthe conventional triangulation method, while the applicability of the\nintelligent locator is more general since analysis of sonic ray paths is\navoided. This is a promising method for non-destructive testing of aircraft\nframe structures by the acoustic emission method.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 13:06:50 GMT"
+      }
+    ],
+    "update_date": "2009-09-29",
+    "authors_parsed": [
+      [
+        "Kosel",
+        "T.",
+        ""
+      ],
+      [
+        "Grabec",
+        "I.",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0050",
+    "submitter": "Igor Grabec",
+    "authors": "T. Kosel and I. Grabec",
+    "title": "Intelligent location of simultaneously active acoustic emission sources:\n  Part II",
+    "comments": "5 pages, 7 eps figures, uses IEEEtran.cls",
+    "journal-ref": null,
+    "doi": null,
+    "report-no": null,
+    "categories": "cs.NE cs.AI",
+    "license": null,
+    "abstract": "  Part I describes an intelligent acoustic emission locator, while Part II\ndiscusses blind source separation, time delay estimation and location of two\ncontinuous acoustic emission sources.\n  Acoustic emission (AE) analysis is used for characterization and location of\ndeveloping defects in materials. AE sources often generate a mixture of various\nstatistically independent signals. A difficult problem of AE analysis is\nseparation and characterization of signal components when the signals from\nvarious sources and the mode of mixing are unknown. Recently, blind source\nseparation (BSS) by independent component analysis (ICA) has been used to solve\nthese problems. The purpose of this paper is to demonstrate the applicability\nof ICA to locate two independent simultaneously active acoustic emission\nsources on an aluminum band specimen. The method is promising for\nnon-destructive testing of aircraft frame structures by acoustic emission\nanalysis.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 18:53:13 GMT"
+      }
+    ],
+    "update_date": "2007-05-23",
+    "authors_parsed": [
+      [
+        "Kosel",
+        "T.",
+        ""
+      ],
+      [
+        "Grabec",
+        "I.",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0062",
+    "submitter": "Tom\\'a\\v{s} Vina\\v{r}",
+    "authors": "Rastislav \\v{S}r\\'amek, Bro\\v{n}a Brejov\\'a, Tom\\'a\\v{s} Vina\\v{r}",
+    "title": "On-line Viterbi Algorithm and Its Relationship to Random Walks",
+    "comments": null,
+    "journal-ref": "Algorithms in Bioinformatics: 7th International Workshop (WABI),\n  4645 volume of Lecture Notes in Computer Science, pp. 240-251, Philadelphia,\n  PA, USA, September 2007. Springer",
+    "doi": "10.1007/978-3-540-74126-8_23",
+    "report-no": null,
+    "categories": "cs.DS",
+    "license": null,
+    "abstract": "  In this paper, we introduce the on-line Viterbi algorithm for decoding hidden\nMarkov models (HMMs) in much smaller than linear space. Our analysis on\ntwo-state HMMs suggests that the expected maximum memory used to decode\nsequence of length $n$ with $m$-state HMM can be as low as $\\Theta(m\\log n)$,\nwithout a significant slow-down compared to the classical Viterbi algorithm.\nClassical Viterbi algorithm requires $O(mn)$ space, which is impractical for\nanalysis of long DNA sequences (such as complete human genome chromosomes) and\nfor continuous data streams. We also experimentally demonstrate the performance\nof the on-line Viterbi algorithm on a simple HMM for gene finding on both\nsimulated and real DNA sequences.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sat, 31 Mar 2007 23:52:33 GMT"
+      }
+    ],
+    "update_date": "2010-01-25",
+    "authors_parsed": [
+      [
+        "\u0160r\u00e1mek",
+        "Rastislav",
+        ""
+      ],
+      [
+        "Brejov\u00e1",
+        "Bro\u0148a",
+        ""
+      ],
+      [
+        "Vina\u0159",
+        "Tom\u00e1\u0161",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0090",
+    "submitter": "Lester Ingber",
+    "authors": "Lester Ingber",
+    "title": "Real Options for Project Schedules (ROPS)",
+    "comments": null,
+    "journal-ref": null,
+    "doi": null,
+    "report-no": "Report 2007:ROPS",
+    "categories": "cs.CE cond-mat.stat-mech cs.MS cs.NA physics.data-an",
+    "license": null,
+    "abstract": "  Real Options for Project Schedules (ROPS) has three recursive\nsampling/optimization shells. An outer Adaptive Simulated Annealing (ASA)\noptimization shell optimizes parameters of strategic Plans containing multiple\nProjects containing ordered Tasks. A middle shell samples probability\ndistributions of durations of Tasks. An inner shell samples probability\ndistributions of costs of Tasks. PATHTREE is used to develop options on\nschedules.. Algorithms used for Trading in Risk Dimensions (TRD) are applied to\ndevelop a relative risk analysis among projects.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 14:35:40 GMT"
+      }
+    ],
+    "update_date": "2007-05-23",
+    "authors_parsed": [
+      [
+        "Ingber",
+        "Lester",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0098",
+    "submitter": "Jack Raymond",
+    "authors": "Jack Raymond, David Saad",
+    "title": "Sparsely-spread CDMA - a statistical mechanics based analysis",
+    "comments": "23 pages, 5 figures, figure 1 amended since published version",
+    "journal-ref": "J. Phys. A: Math. Theor. 40 No 41 (12 October 2007) 12315-12333",
+    "doi": "10.1088/1751-8113/40/41/004",
+    "report-no": null,
+    "categories": "cs.IT math.IT",
+    "license": null,
+    "abstract": "  Sparse Code Division Multiple Access (CDMA), a variation on the standard CDMA\nmethod in which the spreading (signature) matrix contains only a relatively\nsmall number of non-zero elements, is presented and analysed using methods of\nstatistical physics. The analysis provides results on the performance of\nmaximum likelihood decoding for sparse spreading codes in the large system\nlimit. We present results for both cases of regular and irregular spreading\nmatrices for the binary additive white Gaussian noise channel (BIAWGN) with a\ncomparison to the canonical (dense) random spreading code.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 18:27:26 GMT"
+      },
+      {
+        "version": "v2",
+        "created": "Fri, 27 Apr 2007 12:39:14 GMT"
+      },
+      {
+        "version": "v3",
+        "created": "Wed, 1 Aug 2007 19:10:18 GMT"
+      },
+      {
+        "version": "v4",
+        "created": "Sun, 7 Oct 2007 16:50:39 GMT"
+      },
+      {
+        "version": "v5",
+        "created": "Wed, 30 Apr 2008 15:36:55 GMT"
+      }
+    ],
+    "update_date": "2009-11-13",
+    "authors_parsed": [
+      [
+        "Raymond",
+        "Jack",
+        ""
+      ],
+      [
+        "Saad",
+        "David",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0108",
+    "submitter": "Sergey Gubin",
+    "authors": "Sergey Gubin",
+    "title": "Reducing SAT to 2-SAT",
+    "comments": "8 pages",
+    "journal-ref": null,
+    "doi": null,
+    "report-no": null,
+    "categories": "cs.CC",
+    "license": null,
+    "abstract": "  Description of a polynomial time reduction of SAT to 2-SAT of polynomial\nsize.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Sun, 1 Apr 2007 23:16:27 GMT"
+      }
+    ],
+    "update_date": "2007-05-23",
+    "authors_parsed": [
+      [
+        "Gubin",
+        "Sergey",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0213",
+    "submitter": "Ketan Mulmuley D",
+    "authors": "Ketan D. Mulmuley Hariharan Narayanan",
+    "title": "Geometric Complexity Theory V: On deciding nonvanishing of a generalized\n  Littlewood-Richardson coefficient",
+    "comments": "This article has been withdrawn because it has been merged with the\n  earlier article (GCT3) in the series, and a new article appears in this GCT5\n  slot now as shown in the abstract",
+    "journal-ref": null,
+    "doi": null,
+    "report-no": null,
+    "categories": "cs.CC",
+    "license": null,
+    "abstract": "  This article has been withdrawn because it has been merged with the earlier\narticle GCT3 (arXiv: CS/0501076 [cs.CC]) in the series. The merged article is\nnow available as:\n  Geometric Complexity Theory III: on deciding nonvanishing of a\nLittlewood-Richardson Coefficient, Journal of Algebraic Combinatorics, vol. 36,\nissue 1, 2012, pp. 103-110. (Authors: Ketan Mulmuley, Hari Narayanan and Milind\nSohoni)\n  The new article in this GCT5 slot in the series is:\n  Geometric Complexity Theory V: Equivalence between blackbox derandomization\nof polynomial identity testing and derandomization of Noether's Normalization\nLemma, in the Proceedings of FOCS 2012 (abstract), arXiv:1209.5993 [cs.CC]\n(full version) (Author: Ketan Mulmuley)\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Mon, 2 Apr 2007 15:13:27 GMT"
+      },
+      {
+        "version": "v2",
+        "created": "Thu, 27 Sep 2012 15:23:39 GMT"
+      }
+    ],
+    "update_date": "2012-09-28",
+    "authors_parsed": [
+      [
+        "Narayanan",
+        "Ketan D. Mulmuley Hariharan",
+        ""
+      ]
+    ]
+  },
+  {
+    "id": "0704.0217",
+    "submitter": "Wiroonsak Santipach",
+    "authors": "Wiroonsak Santipach and Michael L. Honig",
+    "title": "Capacity of a Multiple-Antenna Fading Channel with a Quantized Precoding\n  Matrix",
+    "comments": null,
+    "journal-ref": "IEEE Trans. Inf. Theory, vol. 55, no. 3, pp. 1218--1234, March\n  2009",
+    "doi": "10.1109/TIT.2008.2011437",
+    "report-no": null,
+    "categories": "cs.IT math.IT",
+    "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+    "abstract": "  Given a multiple-input multiple-output (MIMO) channel, feedback from the\nreceiver can be used to specify a transmit precoding matrix, which selectively\nactivates the strongest channel modes. Here we analyze the performance of\nRandom Vector Quantization (RVQ), in which the precoding matrix is selected\nfrom a random codebook containing independent, isotropically distributed\nentries. We assume that channel elements are i.i.d. and known to the receiver,\nwhich relays the optimal (rate-maximizing) precoder codebook index to the\ntransmitter using B bits. We first derive the large system capacity of\nbeamforming (rank-one precoding matrix) as a function of B, where large system\nrefers to the limit as B and the number of transmit and receive antennas all go\nto infinity with fixed ratios. With beamforming RVQ is asymptotically optimal,\ni.e., no other quantization scheme can achieve a larger asymptotic rate. The\nperformance of RVQ is also compared with that of a simpler reduced-rank scalar\nquantization scheme in which the beamformer is constrained to lie in a random\nsubspace. We subsequently consider a precoding matrix with arbitrary rank, and\napproximate the asymptotic RVQ performance with optimal and linear receivers\n(matched filter and Minimum Mean Squared Error (MMSE)). Numerical examples show\nthat these approximations accurately predict the performance of finite-size\nsystems of interest. Given a target spectral efficiency, numerical examples\nshow that the amount of feedback required by the linear MMSE receiver is only\nslightly more than that required by the optimal receiver, whereas the matched\nfilter can require significantly more feedback.\n",
+    "versions": [
+      {
+        "version": "v1",
+        "created": "Mon, 2 Apr 2007 15:35:24 GMT"
+      },
+      {
+        "version": "v2",
+        "created": "Tue, 17 Feb 2009 03:49:20 GMT"
+      }
+    ],
+    "update_date": "2010-08-27",
+    "authors_parsed": [
+      [
+        "Santipach",
+        "Wiroonsak",
+        ""
+      ],
+      [
+        "Honig",
+        "Michael L.",
+        ""
+      ]
+    ]
+  }
+]
