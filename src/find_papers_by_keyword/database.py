@@ -1,4 +1,5 @@
 import mysql.connector
+from .utils import gen_sql_in_tup
 
 class Database():
     """ Provides methods to write and read from a MySQL database containing Paper and Keyword data
@@ -49,6 +50,21 @@ class Database():
                 SELECT id, title, abstract, citations
                 FROM Publication Publication
             """)
+            return dictcursor.fetchall()
+
+    def get_paper_data_by_id(self, ids: tuple) -> dict:
+        """Get paper data from FoS table by keyword ids
+
+        Arguments:
+        - id's of papers to return
+
+        Returns:
+            A list of dictionaries representing paper rows
+        """
+        fields_in_sql = gen_sql_in_tup(len(ids))
+        sql = "SELECT * FROM Publication WHERE id IN " + fields_in_sql + ";"
+        with self.db.cursor(dictionary=True) as dictcursor:
+            dictcursor.execute(sql, ids)
             return dictcursor.fetchall()
 
     def store_paper_data(self, paper_data) -> None:

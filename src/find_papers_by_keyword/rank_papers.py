@@ -5,6 +5,29 @@ class PaperSearchEngine:
     def __init__(self, db):
         self.db = db
 
+    def get_relevant_papers(self, keywords: tuple, search_limit):
+        """
+        Finds top papers that match a set of query keywords and returns them as a list,
+        sorted in descending order by match scores
+
+        Arguments:
+        - cur: db cursor
+        - keywords: a tuple of keywords in our search query
+        - search_limit: an integer specifying the number of top publication matches to return
+
+        Returns:
+        - A list of tuples representing our search results. Every tuple following the format (paper_id, match_score)
+        """
+        fields_in_sql = gen_sql_in_tup(len(keywords))
+        get_ids_sql =  'SELECT id FROM FoS where keyword IN ' + fields_in_sql + ';'
+
+        with self.db.cursor() as cur:
+            cur.execute(get_ids_sql, keywords)
+            result = cur.fetchall()
+            keyword_ids = tuple(row_tuple[0] for row_tuple in result)
+
+        return self.get_relevant_papers_by_id(keyword_ids, search_limit)
+
     def get_relevant_papers_by_id(self, keyword_ids: tuple, search_limit):
         """
         Finds top papers that match a set of query keywords and returns them as a list,
@@ -12,13 +35,15 @@ class PaperSearchEngine:
 
         Arguments:
         - cur: db cursor
+        - keywords: a tuple of keyword ids corresponding to keywords in our search query
         - search_limit: an integer specifying the number of top publication matches to return
+
+        Returns:
+        - A list of tuples representing our search results. Every tuple following the format (paper_id, match_score)
         """
-        cur = self.db.cursor()
-        self._store_keywords(cur, keyword_ids)
-        results = self._get_ranked_publications(cur)[:search_limit]
-        cur.close()
-        return results
+        with self.db.cursor() as cur:
+            self._store_keywords(cur, keyword_ids)
+            return self._get_ranked_publications(cur)[:search_limit]
 
     def _get_ranked_publications(self, cur):
         """
@@ -131,6 +156,7 @@ class PaperSearchEngine:
         append_given_query_params = [id for id in keyword_ids for i in range(2)]
 
         cur.execute(append_given_sql, append_given_query_params)
+        self.db.commit()
 
 if __name__ == '__main__':
 
@@ -144,4 +170,4 @@ if __name__ == '__main__':
 
     searchEngine = PaperSearchEngine(db)
 
-    print(searchEngine.get_relevant_papers_by_id((1, 5), 5))
+    print(searchEngine.get_relevant_papers_by_id((0,), 5))
