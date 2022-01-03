@@ -2,6 +2,9 @@
 
 This module is responsible for finding research papers that are most relevant to a set of query keywords. The list of papers should be ranked by their relavance to the keywords.
 
+## Demo
+[![DEMO VIDEO](/media/video_thumbnail.gif)](https://www.youtube.com/watch?v=y3OsWIen0mo)
+
 ## Setup
 1) Install necessary module dependencies
 ```
@@ -152,14 +155,14 @@ To retrieve a list of papers given a search query of keywords, we can do a SQL l
 The algorithm will be split into three sections: Generate paper embeddings, assign papers to keywords, find papers by keywords.
 
 The overall architecture of this module is outlined in the diagram below.
-![System Context](/figures/SystemContext.png)
+![System Context](/media/SystemContext.png)
 
 ### 1: Generate Embeddings
 In this step, we will create a vector embedding for every paper on our dataset. This will be done through the Python library `Sentence Transformers`. For every paper, we will concatenate the paper title and abstract, and use this string to genereate a vector embedding. We will do the same for every keyword.
-![Generate Embeddings](/figures/1_GenerateEmbeddings.png)
+![Generate Embeddings](/media/1_GenerateEmbeddings.png)
 
 ### 2: Assign To Keywords
-![Generate Embeddings](/figures/2_AssignPaperKeywords.png)
+![Generate Embeddings](/media/2_AssignPaperKeywords.png)
 Every paper is then assigned a set of keywords that best describe the keywords contents. The algorithm to assign top keywords to papers is described here.
 
 1) Create a regex-based keyword-search index to quickly search for mathing keywords. This regex index will be constructed through an intermediary prefix trie. (implementation found in `src/trie/Trie.py`). We call this index `keywords_re`.
@@ -175,7 +178,7 @@ Every paper is then assigned a set of keywords that best describe the keywords c
     3) For each of the 9 keywords, `unique_kwd` and its corresponding match score, `match_score`, store the entry `(paper_i, unique_kwd, match_score)` in a MySQL Table called `Publication_FoS`.
 
 ### 3: Find papers by Keywords
-![Generate Embeddings](/figures/3_FindPapers.png)
+![Generate Embeddings](/media/3_FindPapers.png)
 The goal of this step is receive a set of query keywords and output a list of research papers that best match the query keywords. We do this by computing a `rank_score` for each paper using data computed from previous stages of this module.
 
 1) Initially, we receive a set of `n` keywords `k_1...k_n`
@@ -184,4 +187,4 @@ The goal of this step is receive a set of query keywords and output a list of re
 4) We finally compute the rank score for paper `p_k` like so.
 
 
-![Generate Embeddings](/figures/rank_score.png)
+![Generate Embeddings](/media/rank_score.png)
