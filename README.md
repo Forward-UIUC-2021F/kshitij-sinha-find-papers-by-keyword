@@ -196,4 +196,4 @@ The goal of this step is receive a set of query keywords and output a list of re
 
 ## References
 * Code examples from `Forward-UIUC-2021F/guidelines/keyword_assignments`
-* MAG papers from ![Open Acaedmic Graph](https://www.microsoft.com/en-us/research/project/open-academic-graph/)
+* MAG papers from [Open Acaedmic Graph](https://www.microsoft.com/en-us/research/project/open-academic-graph/)
