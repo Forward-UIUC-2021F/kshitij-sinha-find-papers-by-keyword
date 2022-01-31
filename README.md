@@ -188,3 +188,8 @@ The goal of this step is receive a set of query keywords and output a list of re
 
 
 ![Generate Embeddings](/media/rank_score.png)
+
+## Issues and Future Work
+* The algorithm needs to be tested on papers that contain citation information. Currently, the module has either been tested on papers that only contain citations and titles, or on papers that only contain titles and abstracts. Further work needs to be done on papers that contain all three fields.
+* The algorithm has only been tested on a subset of papers (about 300,000 papers). The module still needs to be tested on a larger dataset of all MAG papers.
+* The 'find paper' function fails if it's given any keyword that doesn't exist in the FoS table. Ideally, the module should fail gracefully if given invalid keywords.
